@@ -9,20 +9,22 @@ function error(err, res, bod) {
 }
 
 function success(data) {
-  console.log('success');
+  console.log(data);
 }
 
-app.get('/retweet', (req, res) => {
-  console.log(twitter);
-  twitter.getReTweetsOfMe({ count: '1' }, error, success);
-});
+function showScreenName(data) {
+  console.log(data.screen_name);
+}
 
 app.get('/following', (req, res) => {
   twitter.getFollowing({ count: '1' }, error, success);
 })
 
-app.post('/follow', (req, res) => {
-  console.log('follow');
+app.get('/settings', (req, res) => {
+  twitter.getAccountSettings({}, error, showScreenName);
+})
+
+app.get('/follow', (req, res) => {
   twitter.postFollow({ user_id: '851576666941825024' }, error, success);
 })
 
