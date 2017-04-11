@@ -1,0 +1,29 @@
+{
+  "name": "mister-popular",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.15.2",
+    "qs": "^6.4.0",
+    "oauth": "^0.9.15"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "nodemon ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jyaaan/mister-popular.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jyaaan/mister-popular/issues"
+  },
+  "homepage": "https://github.com/jyaaan/mister-popular#readme"
+}
