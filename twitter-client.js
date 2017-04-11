@@ -70,14 +70,6 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 // GET
 
-Twitter.prototype.getReTweetsOfMe = function (params, error, success) {
-  console.log('getting retweets');
-  var path = '/statuses/retweets_of_me.json' + this.buildQS(params);
-  var url = this.baseUrl + path;
-  console.log(url);
-  this.doRequest(url, error, success);
-};
-
 Twitter.prototype.getFollowing = function (params, error, success) {
   console.log('getting all following');
   var path = '/friends/list.json' + this.buildQS(params);
@@ -108,11 +100,7 @@ Twitter.prototype.postFollow = function (params, error, success) {
 // DO FUNCTIONS
 
 Twitter.prototype.doRequest = function (url, error, success) {
-  url = url.replace(/\!/g, "%21")
-    .replace(/\'/g, "%27")
-    .replace(/\(/g, "%28")
-    .replace(/\)/g, "%29")
-    .replace(/\*/g, "%2A");
+  url = formatUrl(url);
 
   this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
     if(!err && res.statusCode == 200) {
@@ -123,25 +111,20 @@ Twitter.prototype.doRequest = function (url, error, success) {
       };
       success(JSON.parse(bod));
     } else {
-      console.error('do request error');
+      console.error('do request error' + err);
     }
-    console.log(res);
   })
 }
 
 Twitter.prototype.doPost = function (url, post_body, error, success) {
-  url = url.replace(/\!/g, "%21")
-       .replace(/\'/g, "%27")
-       .replace(/\(/g, "%28")
-       .replace(/\)/g, "%29")
-       .replace(/\*/g, "%2A");
+  url = formatUrl(url);
 
   this.oauth.post(url, this.accessToken, this.accessTokenSecret, post_body, 'application/x-www-form-urlencoded', (err, bod, res) => {
     if (!err && res.statusCode == 200) {
-      success(JSON.parse(res));
+      success(JSON.parse(bod));
     } else {
-      console.error(err);
-      error(err, res, bod);
+      console.error('doPost error' + err);
+      // error(err, res, bod);
     }
   })
 }
@@ -153,4 +136,15 @@ Twitter.prototype.buildQS = function (params) {
   return;
 };
 
+// UTILITY FUNCTIONS
+
+function formatUrl(url) {
+  return url.replace(/\!/g, "%21")
+       .replace(/\'/g, "%27")
+       .replace(/\(/g, "%28")
+       .replace(/\)/g, "%29")
+       .replace(/\*/g, "%2A");
+}
+
+// EXPORT
 exports.Twitter = Twitter;

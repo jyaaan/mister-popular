@@ -9,26 +9,22 @@ function error(err, res, bod) {
 }
 
 function success(data) {
-  var objTwitterBody = data;
-  console.log(objTwitterBody.users);
+  console.log(data);
 }
 
-app.get('/retweet', (req, res) => {
-  console.log(twitter);
-  twitter.getReTweetsOfMe({ count: '1' }, error, success);
-});
+function showScreenName(data) {
+  console.log(data.screen_name);
+}
 
 app.get('/following', (req, res) => {
   twitter.getFollowing({ count: '1' }, error, success);
 })
 
 app.get('/settings', (req, res) => {
-  console.log('settings');
-  twitter.getAccountSettings({}, error, success);
+  twitter.getAccountSettings({}, error, showScreenName);
 })
 
 app.get('/follow', (req, res) => {
-  console.log('follow');
   twitter.postFollow({ user_id: '851576666941825024' }, error, success);
 })
 
