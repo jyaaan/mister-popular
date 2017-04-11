@@ -9,7 +9,8 @@ function error(err, res, bod) {
 }
 
 function success(data) {
-  console.log('success');
+  var objTwitterBody = data;
+  console.log(objTwitterBody.users);
 }
 
 app.get('/retweet', (req, res) => {
@@ -21,7 +22,12 @@ app.get('/following', (req, res) => {
   twitter.getFollowing({ count: '1' }, error, success);
 })
 
-app.post('/follow', (req, res) => {
+app.get('/settings', (req, res) => {
+  console.log('settings');
+  twitter.getAccountSettings({}, error, success);
+})
+
+app.get('/follow', (req, res) => {
   console.log('follow');
   twitter.postFollow({ user_id: '851576666941825024' }, error, success);
 })

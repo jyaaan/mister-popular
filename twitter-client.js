@@ -11,6 +11,8 @@ var config = {
    callBackUrl: "http://localhost:5760/index.html"
 }
 
+// CONSTRUCTOR
+
 function Twitter() {
   var configPath = 'data/twitter_config';
   try {
@@ -33,6 +35,8 @@ function Twitter() {
     console.log('missing config file');
   }
 }
+
+// AUTHENTICATION FUNCTIONS
 
 Twitter.prototype.getOAuthRequestToken = function (next) {
   this.oauth.getOAuthRequestToken((err, oauthToken, oauthTokenSecret, results) => {
@@ -62,8 +66,12 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
     });
 };
 
+// TWITTER API FUNCTIONS
+
+// GET
+
 Twitter.prototype.getReTweetsOfMe = function (params, error, success) {
-  console.log('running retweets');
+  console.log('getting retweets');
   var path = '/statuses/retweets_of_me.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
@@ -71,20 +79,33 @@ Twitter.prototype.getReTweetsOfMe = function (params, error, success) {
 };
 
 Twitter.prototype.getFollowing = function (params, error, success) {
-  console.log('running get all folloing');
+  console.log('getting all following');
   var path = '/friends/list.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
   this.doRequest(url, error, success);
 }
 
+Twitter.prototype.getAccountSettings = function (params, error, success) {
+  console.log('getting account settings');
+  var path = '/account/settings.json';
+  var url = this.baseUrl + path;
+  console.log(url);
+    this.doRequest(url, error, success);
+}
+
+// POST
+
 Twitter.prototype.postFollow = function (params, error, success) {
-  console.log('running follow');
+  console.log('posting follow');
   var path = '/friendships/create.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
   this.doPost(url, {}, error, success);
 }
+
+
+// DO FUNCTIONS
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = url.replace(/\!/g, "%21")
@@ -100,7 +121,7 @@ Twitter.prototype.doRequest = function (url, error, success) {
         "x-rate-limit-remaining": res.headers['x-rate-limit-remaining'],
         "x-rate-limit-reset": res.headers['x-rate-limit-reset']
       };
-      success(bod, limits);
+      success(JSON.parse(bod));
     } else {
       console.error('do request error');
     }
@@ -117,7 +138,7 @@ Twitter.prototype.doPost = function (url, post_body, error, success) {
 
   this.oauth.post(url, this.accessToken, this.accessTokenSecret, post_body, 'application/x-www-form-urlencoded', (err, bod, res) => {
     if (!err && res.statusCode == 200) {
-      success(bod);
+      success(JSON.parse(res));
     } else {
       console.error(err);
       error(err, res, bod);
