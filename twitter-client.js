@@ -106,20 +106,21 @@ Twitter.prototype.doRequest = function (url, error, success) {
     function cb(err, bod, res) {
       if(!err) {
         console.log('success');
-        // var jsonBod = JSON.parse(bod);
-        // var nextCursor = jsonBod['next_cursor'];
-        // arrData.push(jsonBod.users);
+        var jsonBod = JSON.parse(bod);
+        var nextCursor = jsonBod['next_cursor'];
+        arrData.push(jsonBod.users);
       } else {
         console.error('do request error' + err);
+        nextCursor = 0;
       }
-      // if (nextCursor != 0) {
-      //   this.oauth.get(url + this.buildQS({ cursor: nextCursor }), this.accessToken, this.accessTokenSecret, cb.bind(this));
-      // } else {
-      //   //terminate this request and return array of users.
-      //   resolve(arrData);
-      // }
+      if (nextCursor != 0) {
+        this.oauth.get(url + this.buildQS({ cursor: nextCursor }), this.accessToken, this.accessTokenSecret, cb.bind(this));
+      } else {
+        //terminate this request and return array of users.
+        resolve(arrData);
+      }
     }
-    this.oauth.get(url, atoken, atokensec, cb);
+    this.oauth.get(url, atoken, atokensec, cb.bind(this));
   });
 }
 
