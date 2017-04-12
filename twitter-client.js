@@ -72,7 +72,7 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 Twitter.prototype.getFollowing = function (params, error, success) {
   console.log('getting all following');
-  var path = '/friends/list.json' + this.buildQS(params);
+  var path = '/friends/list.json';
   var url = this.baseUrl + path;
   console.log(url);
   this.doRequest(url, error, success);
@@ -101,19 +101,17 @@ Twitter.prototype.postFollow = function (params, error, success) {
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = formatUrl(url);
-
+  var nextCursor = -1;
   this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
     if(!err && res.statusCode == 200) {
-      limits = {
-        "x-rate-limit-limit": res.headers['x-rate-limit-limit'],
-        "x-rate-limit-remaining": res.headers['x-rate-limit-remaining'],
-        "x-rate-limit-reset": res.headers['x-rate-limit-reset']
-      };
-      success(JSON.parse(bod));
+      var jsonBod = JSON.parse(bod);
+      nextCursor =jsonBod['next_cursor'];
+      success(jsonBod);
     } else {
       console.error('do request error' + err);
     }
   })
+  console.log(nextCursor);
 }
 
 Twitter.prototype.doPost = function (url, post_body, error, success) {
@@ -145,6 +143,8 @@ function formatUrl(url) {
        .replace(/\)/g, "%29")
        .replace(/\*/g, "%2A");
 }
+
+
 
 // EXPORT
 exports.Twitter = Twitter;
