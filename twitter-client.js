@@ -4,7 +4,6 @@ var fs = require('fs');
 
 // MORE SECURE
 var config = require('./user-config');
-console.log(config);
 
 // CONSTRUCTOR
 
@@ -67,12 +66,12 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 Twitter.prototype.getFollowing = function (params, error, success) {
   console.log('getting all following');
-  var path = '/friends/list.json';
+  var path = '/friends/ids.json';
   var url = this.baseUrl + path;
   console.log(url);
-  this.doRequest(url, error, success)
+  this.doRequests(url, error, success)
     .then((data) => {
-      console.log(data);
+      console.log('number of ids: ' + data[0].length);
     })
 }
 
@@ -84,6 +83,12 @@ Twitter.prototype.getAccountSettings = function (params, error, success) {
     this.doRequest(url, error, success);
 }
 
+Twitter.prototype.getRateLimits = function (error, success) {
+  console.log('getting limits');
+  var path = '/application/rate_limit_status.json';
+  var url = this.baseUrl + path;
+  this.doRequest(url, error, success);
+}
 // POST
 
 Twitter.prototype.postFollow = function (params, error, success) {
@@ -99,16 +104,25 @@ Twitter.prototype.postFollow = function (params, error, success) {
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = formatUrl(url);
+  this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
+    if(!err && res.statusCode == 200) {
+      success(bod);
+    } else {
+      console.error('do request error' + err);
+    }
+  })
+}
+
+Twitter.prototype.doRequests = function (url, error, success) {
+  url = formatUrl(url);
   var arrData = [];
-  var atoken = this.accessToken;
-  var atokensec = this.accessTokenSecret;
   return new Promise((resolve, reject) => {
     function cb(err, bod, res) {
       if(!err) {
         console.log('success');
         var jsonBod = JSON.parse(bod);
         var nextCursor = jsonBod['next_cursor'];
-        arrData.push(jsonBod.users);
+        arrData.push(jsonBod.ids);
       } else {
         console.error('do request error' + err);
         nextCursor = 0;
@@ -120,7 +134,7 @@ Twitter.prototype.doRequest = function (url, error, success) {
         resolve(arrData);
       }
     }
-    this.oauth.get(url, atoken, atokensec, cb.bind(this));
+    this.oauth.get(url, this.accessToken, this.accessTokenSecret, cb.bind(this));
   });
 }
 
@@ -153,8 +167,6 @@ function formatUrl(url) {
        .replace(/\)/g, "%29")
        .replace(/\*/g, "%2A");
 }
-
-
 
 // EXPORT
 exports.Twitter = Twitter;
