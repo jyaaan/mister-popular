@@ -17,7 +17,7 @@ function showScreenName(data) {
 }
 
 app.get('/following', (req, res) => {
-  twitter.getFollowing({ count: '1' }, error, success);
+  twitter.getFollowing({}, error, success);
 })
 
 app.get('/settings', (req, res) => {
@@ -25,7 +25,7 @@ app.get('/settings', (req, res) => {
 })
 
 app.get('/follow', (req, res) => {
-  twitter.postFollow({ user_id: '851576666941825024' }, error, success);
+  twitter.postFollow({}, error, success);
 })
 
 app.listen(5760, () => {

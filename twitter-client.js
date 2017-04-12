@@ -2,14 +2,9 @@ var OAuth = require('oauth').OAuth;
 var qs = require('qs');
 var fs = require('fs');
 
-// NOT SECURE
-var config = {
-   consumerKey: "fBCYy7We2pk8Yj8JlgfafLxsm",
-   consumerSecret: "1UyUroQt3NaWjqSgIkfgiSnWjikwT8JsszfIjjsh6oZUSiRF2N",
-   accessToken: "862332097-3dn8t0TrRgFueWsURvI9zxYHSyIP6Pk3RZdUol2H",
-   accessTokenSecret: "QN8Fa1dBd2YP91NrsOT2Ob7WurvPXA9ZrX0b80JZ7tkMO",
-   callBackUrl: "http://localhost:5760/index.html"
-}
+// MORE SECURE
+var config = require('./user-config');
+console.log(config);
 
 // CONSTRUCTOR
 
@@ -75,7 +70,10 @@ Twitter.prototype.getFollowing = function (params, error, success) {
   var path = '/friends/list.json';
   var url = this.baseUrl + path;
   console.log(url);
-  this.doRequest(url, error, success);
+  this.doRequest(url, error, success)
+    .then((data) => {
+      console.log(data);
+    })
 }
 
 Twitter.prototype.getAccountSettings = function (params, error, success) {
@@ -101,17 +99,28 @@ Twitter.prototype.postFollow = function (params, error, success) {
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = formatUrl(url);
-  var nextCursor = -1;
-  this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
-    if(!err && res.statusCode == 200) {
-      var jsonBod = JSON.parse(bod);
-      nextCursor =jsonBod['next_cursor'];
-      success(jsonBod);
-    } else {
-      console.error('do request error' + err);
+  var arrData = [];
+  var atoken = this.accessToken;
+  var atokensec = this.accessTokenSecret;
+  return new Promise((resolve, reject) => {
+    function cb(err, bod, res) {
+      if(!err) {
+        console.log('success');
+        // var jsonBod = JSON.parse(bod);
+        // var nextCursor = jsonBod['next_cursor'];
+        // arrData.push(jsonBod.users);
+      } else {
+        console.error('do request error' + err);
+      }
+      // if (nextCursor != 0) {
+      //   this.oauth.get(url + this.buildQS({ cursor: nextCursor }), this.accessToken, this.accessTokenSecret, cb.bind(this));
+      // } else {
+      //   //terminate this request and return array of users.
+      //   resolve(arrData);
+      // }
     }
-  })
-  console.log(nextCursor);
+    this.oauth.get(url, atoken, atokensec, cb);
+  });
 }
 
 Twitter.prototype.doPost = function (url, post_body, error, success) {
