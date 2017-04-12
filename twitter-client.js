@@ -118,10 +118,10 @@ Twitter.prototype.doRequests = function (url, error, success) {
   var users = [];
   return new Promise((resolve, reject) => {
     function cb(err, bod, res) {
+      var jsonBod = JSON.parse(bod);
+      var nextCursor = jsonBod['next_cursor'];
       if(!err) {
         console.log('success');
-        var jsonBod = JSON.parse(bod);
-        var nextCursor = jsonBod['next_cursor'];
         users.push(jsonBod.ids);
       } else {
         console.error('do request error' + err);
