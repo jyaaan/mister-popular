@@ -71,7 +71,7 @@ Twitter.prototype.getFollowing = function (params, error, success) {
   console.log(url);
   this.doRequests(url, error, success)
     .then((data) => {
-      console.log('number of ids: ' + data[0].length);
+      console.log(data);
     })
 }
 
@@ -115,14 +115,14 @@ Twitter.prototype.doRequest = function (url, error, success) {
 
 Twitter.prototype.doRequests = function (url, error, success) {
   url = formatUrl(url);
-  var arrData = [];
+  var users = [];
   return new Promise((resolve, reject) => {
     function cb(err, bod, res) {
       if(!err) {
         console.log('success');
         var jsonBod = JSON.parse(bod);
         var nextCursor = jsonBod['next_cursor'];
-        arrData.push(jsonBod.ids);
+        users.push(jsonBod.ids);
       } else {
         console.error('do request error' + err);
         nextCursor = 0;
@@ -131,7 +131,7 @@ Twitter.prototype.doRequests = function (url, error, success) {
         this.oauth.get(url + this.buildQS({ cursor: nextCursor }), this.accessToken, this.accessTokenSecret, cb.bind(this));
       } else {
         //terminate this request and return array of users.
-        resolve(arrData);
+        resolve(users);
       }
     }
     this.oauth.get(url, this.accessToken, this.accessTokenSecret, cb.bind(this));
