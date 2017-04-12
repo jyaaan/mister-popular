@@ -64,14 +64,14 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 // GET
 
-Twitter.prototype.getFollowing = function (params, error, success) {
+Twitter.prototype.getFollowing = function () {
   console.log('getting all following');
   var path = '/friends/ids.json';
   var url = this.baseUrl + path;
   console.log(url);
-  this.doRequests(url, error, success)
+  return this.doRequests(url)
     .then((data) => {
-      console.log(data);
+      return data[0];
     })
 }
 
@@ -99,7 +99,6 @@ Twitter.prototype.postFollow = function (params, error, success) {
   this.doPost(url, {}, error, success);
 }
 
-
 // DO FUNCTIONS
 
 Twitter.prototype.doRequest = function (url, error, success) {
@@ -113,7 +112,7 @@ Twitter.prototype.doRequest = function (url, error, success) {
   })
 }
 
-Twitter.prototype.doRequests = function (url, error, success) {
+Twitter.prototype.doRequests = function (url) {
   url = formatUrl(url);
   var users = [];
   return new Promise((resolve, reject) => {

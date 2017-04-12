@@ -21,7 +21,10 @@ app.get('/limits', (req, res) => {
 })
 
 app.get('/following', (req, res) => {
-  twitter.getFollowing({}, error, success);
+  twitter.getFollowing()
+    .then((data) => {
+      res.send(data);
+    });
 })
 
 app.get('/settings', (req, res) => {
