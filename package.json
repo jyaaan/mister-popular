@@ -5,15 +5,20 @@
   "main": "index.js",
   "dependencies": {
     "express": "^4.15.2",
-    "qs": "^6.4.0",
-    "oauth": "^0.9.15"
+    "knex": "^0.12.9",
+    "oauth": "^0.9.15",
+    "pg": "^6.1.5",
+    "qs": "^6.4.0"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "nodemon ."
+    "watch": "nodemon .",
+    "migrate:make": "knex migrate:make",
+    "migrate": "knex migrate:latest",
+    "rollback": "knex migrate:rollback"
   },
   "repository": {
     "type": "git",
