@@ -49,8 +49,8 @@ app.get('/ids', (req, res) => {
 app.get('/insert-ids', (req, res) => {
   twitter.getFollowing()
     .then((data) => {
-      var userObj = pairKeyValue('id', data);
-      database.insertUserIds('clients', userObj)
+      var userObjs = pairKeyValue('id', data);
+      database.insertObjects('clients', userObjs)
       .then((result) => {
         res.send(result);
       });
