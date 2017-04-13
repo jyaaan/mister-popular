@@ -44,9 +44,9 @@ app.get('/test', (req, res) => {
     .then((data) => {
       var userObj = pairKeyValue('id', data);
       database.insertUserIds('clients', userObj)
-        .then((result) => {
-          res.send(result);
-        });
+      .then((result) => {
+        res.send(result);
+      });
     });
 })
 
