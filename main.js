@@ -26,8 +26,7 @@ app.get('/limits', (req, res) => {
 app.get('/following', (req, res) => {
   twitter.getFollowing()
     .then((data) => {
-      console.log(data[0]);
-      // res.send(data);
+      res.send(data);
     });
 })
 
@@ -37,6 +36,14 @@ app.get('/settings', (req, res) => {
 
 app.get('/follow', (req, res) => {
   twitter.postFollow({}, error, success);
+})
+
+app.get('/ids', (req, res) => {
+  database.getUserIds('clients')
+    .then((result) => {
+      console.log(result[1].id);
+      res.send(result[1].id);
+    })
 })
 
 app.get('/test', (req, res) => {
