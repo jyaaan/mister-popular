@@ -4,6 +4,9 @@ var app = express();
 var Twitter = require('./twitter-client').Twitter;
 var twitter = new Twitter();
 
+var Database = require('./database').Database;
+var database = new Database();
+
 function error(err, res, bod) {
   console.log('error: ' + err);
 }
@@ -33,6 +36,20 @@ app.get('/settings', (req, res) => {
 
 app.get('/follow', (req, res) => {
   twitter.postFollow({}, error, success);
+})
+
+app.get('/test', (req, res) => {
+  database.clearTable('clients')
+    .then((result) => {
+      res.send(result);
+    });
+})
+
+app.get('/clear/:tableName', (req, res) => {
+  database.clearTable(req.params.tableName)
+    .then((result) => {
+      res.send(result);
+    });
 })
 
 app.listen(5760, () => {
