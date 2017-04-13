@@ -129,7 +129,6 @@ Twitter.prototype.doRequests = function (url) {
       if (nextCursor != 0) {
         this.oauth.get(url + this.buildQS({ cursor: nextCursor }), this.accessToken, this.accessTokenSecret, cb.bind(this));
       } else {
-        //terminate this request and return array of users.
         resolve(users);
       }
     }
@@ -145,7 +144,6 @@ Twitter.prototype.doPost = function (url, post_body, error, success) {
       success(JSON.parse(bod));
     } else {
       console.error('doPost error' + err);
-      // error(err, res, bod);
     }
   })
 }
