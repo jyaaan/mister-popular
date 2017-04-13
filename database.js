@@ -18,7 +18,7 @@ Database.prototype.getUserIds = function (tableName) {
   return knex(tableName).select('id');
 }
 
-Database.prototype.insertUserIds = function (tableName, arrObjData) {
+Database.prototype.insertObjects = function (tableName, arrObjData) {
   return knex.transaction((trx) => {
     return knex.batchInsert(tableName, arrObjData)
       .transacting(trx)

@@ -46,7 +46,7 @@ app.get('/ids', (req, res) => {
     })
 })
 
-app.get('/test', (req, res) => {
+app.get('/insert-ids', (req, res) => {
   twitter.getFollowing()
     .then((data) => {
       var userObj = pairKeyValue('id', data);
@@ -75,5 +75,3 @@ function pairKeyValue(key, values) {
     return obj;
   });
 }
-
-// this is to test git error
