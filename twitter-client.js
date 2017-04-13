@@ -2,14 +2,8 @@ var OAuth = require('oauth').OAuth;
 var qs = require('qs');
 var fs = require('fs');
 
-// NOT SECURE
-var config = {
-   consumerKey: "fBCYy7We2pk8Yj8JlgfafLxsm",
-   consumerSecret: "1UyUroQt3NaWjqSgIkfgiSnWjikwT8JsszfIjjsh6oZUSiRF2N",
-   accessToken: "862332097-3dn8t0TrRgFueWsURvI9zxYHSyIP6Pk3RZdUol2H",
-   accessTokenSecret: "QN8Fa1dBd2YP91NrsOT2Ob7WurvPXA9ZrX0b80JZ7tkMO",
-   callBackUrl: "http://localhost:5760/index.html"
-}
+// MORE SECURE
+var config = require('./user-config');
 
 // CONSTRUCTOR
 
@@ -70,12 +64,15 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 // GET
 
-Twitter.prototype.getFollowing = function (params, error, success) {
+Twitter.prototype.getFollowing = function () {
   console.log('getting all following');
-  var path = '/friends/list.json' + this.buildQS(params);
+  var path = '/friends/ids.json';
   var url = this.baseUrl + path;
   console.log(url);
-  this.doRequest(url, error, success);
+  return this.doRequests(url)
+    .then((data) => {
+      return data[0];
+    })
 }
 
 Twitter.prototype.getAccountSettings = function (params, error, success) {
@@ -86,6 +83,12 @@ Twitter.prototype.getAccountSettings = function (params, error, success) {
     this.doRequest(url, error, success);
 }
 
+Twitter.prototype.getRateLimits = function (error, success) {
+  console.log('getting limits');
+  var path = '/application/rate_limit_status.json';
+  var url = this.baseUrl + path;
+  this.doRequest(url, error, success);
+}
 // POST
 
 Twitter.prototype.postFollow = function (params, error, success) {
@@ -96,24 +99,42 @@ Twitter.prototype.postFollow = function (params, error, success) {
   this.doPost(url, {}, error, success);
 }
 
-
 // DO FUNCTIONS
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = formatUrl(url);
-
   this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
     if(!err && res.statusCode == 200) {
-      limits = {
-        "x-rate-limit-limit": res.headers['x-rate-limit-limit'],
-        "x-rate-limit-remaining": res.headers['x-rate-limit-remaining'],
-        "x-rate-limit-reset": res.headers['x-rate-limit-reset']
-      };
-      success(JSON.parse(bod));
+      success(bod);
     } else {
       console.error('do request error' + err);
     }
   })
+}
+
+Twitter.prototype.doRequests = function (url) {
+  url = formatUrl(url);
+  var users = [];
+  return new Promise((resolve, reject) => {
+    function cb(err, bod, res) {
+      var jsonBod = JSON.parse(bod);
+      var nextCursor = jsonBod['next_cursor'];
+      if(!err) {
+        console.log('success');
+        users.push(jsonBod.ids);
+      } else {
+        console.error('do request error' + err);
+        nextCursor = 0;
+      }
+      if (nextCursor != 0) {
+        this.oauth.get(url + this.buildQS({ cursor: nextCursor }), this.accessToken, this.accessTokenSecret, cb.bind(this));
+      } else {
+        //terminate this request and return array of users.
+        resolve(users);
+      }
+    }
+    this.oauth.get(url, this.accessToken, this.accessTokenSecret, cb.bind(this));
+  });
 }
 
 Twitter.prototype.doPost = function (url, post_body, error, success) {

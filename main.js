@@ -8,7 +8,7 @@ function error(err, res, bod) {
   console.log('error: ' + err);
 }
 
-function success(data) {
+function success(data, limits) {
   console.log(data);
 }
 
@@ -16,16 +16,23 @@ function showScreenName(data) {
   console.log(data.screen_name);
 }
 
+app.get('/limits', (req, res) => {
+  twitter.getRateLimits(error, success);
+})
+
 app.get('/following', (req, res) => {
-  twitter.getFollowing({ count: '1' }, error, success);
+  twitter.getFollowing()
+    .then((data) => {
+      res.send(data);
+    });
 })
 
 app.get('/settings', (req, res) => {
-  twitter.getAccountSettings({}, error, showScreenName);
+  twitter.getAccountSettings({}, error, success);
 })
 
 app.get('/follow', (req, res) => {
-  twitter.postFollow({ user_id: '851576666941825024' }, error, success);
+  twitter.postFollow({}, error, success);
 })
 
 app.listen(5760, () => {
