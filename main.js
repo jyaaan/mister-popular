@@ -26,7 +26,8 @@ app.get('/limits', (req, res) => {
 app.get('/following', (req, res) => {
   twitter.getFollowing()
     .then((data) => {
-      res.send(data);
+      console.log(data[0]);
+      // res.send(data);
     });
 })
 
@@ -39,9 +40,13 @@ app.get('/follow', (req, res) => {
 })
 
 app.get('/test', (req, res) => {
-  database.clearTable('clients')
-    .then((result) => {
-      res.send(result);
+  twitter.getFollowing()
+    .then((data) => {
+      var userObj = pairKeyValue('id', data);
+      database.insertUserIds('clients', userObj)
+      .then((result) => {
+        res.send(result);
+      });
     });
 })
 
@@ -55,3 +60,11 @@ app.get('/clear/:tableName', (req, res) => {
 app.listen(5760, () => {
   console.log('listening to port 5760');
 })
+
+function pairKeyValue(key, values) {
+  return values.map((value) => {
+    var obj = {};
+    obj[key] = value;
+    return obj;
+  });
+}
