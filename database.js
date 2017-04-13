@@ -14,8 +14,8 @@ Database.prototype.clearTable = function (tableName) {
   return knex(tableName).truncate();
 }
 
-Database.prototype.getUserIds = function () {
-
+Database.prototype.getUserIds = function (tableName) {
+  return knex(tableName).select('id');
 }
 
 Database.prototype.insertUserIds = function (tableName, arrObjData) {
