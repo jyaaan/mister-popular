@@ -22,11 +22,13 @@ function Schedule(type, clientId, params) {
   this.clientId = clientId;
   this.startTime = params.startTime;
   this.stopTime = params.stopTime;
-  this.targetActions = params.targetActions;
+  this.targetActions = params.targetActions; // this has to be less than resolution * active buckets
   this.actionSchedule = [];
   this.activeBuckets = [];
   this.resolution = params.resolution; // this shows how many actions can be done in a 15 min interval
   this.minInterval = 3; // in seconds
+  this.plan = [];
+  this.planPos = 0;
 }
 
 function initBuckets() {
@@ -64,7 +66,7 @@ function bucketToTime(bucketIndex) {
 // need to randomly distribute actions into bucket
 
 function getBucketQuantity(startTime, stopTime) {
-  return bucketToTime(stopTime) - bucketToTime(startTime);
+  return timeToBucket(stopTime) - timeToBucket(startTime);
 }
 
 Schedule.prototype.assignBucketQuantities() {
@@ -75,7 +77,7 @@ Schedule.prototype.assignBucketQuantities() {
   var actionsToBeDone = this.targetActions;
   // set up function so that random placement will populate buckets
   // with ceiling values for each bucket.
-
+  // add: check to see if actionsToBeDone < resolution * numberOfBuckets
   for (var i = 0; var i < actionsToBeDone; i++) {
     do {
       var targetBucket = startBucket + Math.floor(Math.random() * numberOfBuckets);
@@ -107,22 +109,46 @@ Schedule.prototype.populateBuckets() {
   // now each bucket should have a list of actions that should be in seconds from the start of the bucket
 }
 
-Schedule.prototype.generateActionSchedule() {
+Schedule.prototype.generateActionPlan() {
   // go through each bucket, convert actions in buckets to time and push to Schedule
   // convert bucket number into hours + minutes and then add the content of buckets[i].actions[]
-
-
-  var schedule = this.buckets.filter();
+  var plan = [];
+  this.buckets.forEach((bucket) => {
+    if (bucket.quantity > 0) {
+      plan.push(bucket.actions.map((action) => {
+        return bucketToTime(bucket.absQuarter) + action // adding action seconds to the time returned as date object
+      }));
+    }
+  })
+  return plan;
+  // now we can step through the array returned here to schedule stuff
 }
 
-function getNextAction() {
-  // this will get the
+Schedule.prototype.getNextAction = function () {
+  // this will get the index position of the plan
   // each action object will have a boolean to determine if it's been read
-
+  var now = new Date(Date.now());
+  // this might not work
+  var futureActions = this.plan.filter((action) => {
+    return action > now;
+  })
+  if (futureActions.length > 0) {
+    return
+  }
   // set bool to read
-
 }
 
+Schedule.prototype.scheduleNextAction = function (functionToBeDone, params) {
+  // whenever this is run, it will check to see if there is a future action to schedule
+  // if there is, schedule it and return the schedule object.
+
+  // function to get the next action
+  return scheduler.scheduleJob( , () => {
+    //function to mark this action as done
+    this.scheduleNextAction();
+    functionToBeDone();
+  })
+}
 // you have to schedule a refresh at midnight of every day in time zone
 
 // you need a function to initialize everything to put into the daily schedule
