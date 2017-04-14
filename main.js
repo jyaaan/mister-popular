@@ -7,6 +7,9 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
+var Schedule = require('./schedule').Schedule;
+var schedule = new Schedule();
+
 function error(err, res, bod) {
   console.log('error: ' + err);
 }

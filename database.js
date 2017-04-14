@@ -1,3 +1,7 @@
+/*
+EXCEPT: following except followers = users not following back
+*/
+
 var knex = require('knex')({
   client: 'postgresql',
   connection: {
