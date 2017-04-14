@@ -21,7 +21,7 @@ function Schedule(type, clientId, params) {
   this.buckets = initBuckets();
   this.clientId = clientId;
   this.startTime = params.startTime;
-  this.endTime = params.endTime;
+  this.stopTime = params.stopTime;
   this.targetActions = params.targetActions;
   this.actionSchedule = [];
   this.activeBuckets = [];
@@ -30,16 +30,11 @@ function Schedule(type, clientId, params) {
 }
 
 function initBuckets() {
-  // change this so that it's just bucket[absolute_quarter]
   var objBuckets = [];
-  for (var i = 0; i < 24; i++) {
+  for (var i = 0; i < 96; i++) {
     var bucket = new Object();
-    bucket.hour = i;
-    bucket.quarter = [];
-    for (var j = 0; j < 4; j++) {
-      bucket.quarter[j] = new Object();
-      bucket.quarter[j].quantity = 0;
-    }
+    bucket.absQuarter = i;
+    bucket.quantity = 0;
     objBuckets.push(bucket);
   }
   return objBuckets;
@@ -68,19 +63,22 @@ function bucketToTime(bucketIndex) {
 // need to know max actions per bucket
 // need to randomly distribute actions into bucket
 
+function getBucketQuantity(startTime, stopTime) {
+  return bucketToTime(stopTime) - bucketToTime(startTime);
+}
 
 Schedule.prototype.assignBucketQuantities() {
   // get the number of buckets included in time range
-  var numberOfBuckets;
+  var numberOfBuckets = getBucketQuantity(this.startTime, this.stopTime);
+  vart startBucket = timeToBucket(this.startTime);
   // get the number of actions to be done
-  var actionsToBeDone;
+  var actionsToBeDone = this.targetActions;
   // set up function so that random placement will populate buckets
   // with ceiling values for each bucket.
 
   for (var i = 0; var i < actionsToBeDone; i++) {
     do {
-      var targetBucket = Math.floor(Math.random() * numberOfBuckets);
-
+      var targetBucket = startBucket + Math.floor(Math.random() * numberOfBuckets);
     } while (bucket.quarter[targetBucket].quantity < this.resolution)
     // increment quantity of actions in this bucket
     buckets.quarter[targetBucket].quantity++;
@@ -112,6 +110,8 @@ Schedule.prototype.populateBuckets() {
 Schedule.prototype.generateActionSchedule() {
   // go through each bucket, convert actions in buckets to time and push to Schedule
   // convert bucket number into hours + minutes and then add the content of buckets[i].actions[]
+
+
   var schedule = this.buckets.filter();
 }
 
@@ -122,6 +122,10 @@ function getNextAction() {
   // set bool to read
 
 }
+
+// you have to schedule a refresh at midnight of every day in time zone
+
+// you need a function to initialize everything to put into the daily schedule
 
 exports.Schedule = Schedule;
 
