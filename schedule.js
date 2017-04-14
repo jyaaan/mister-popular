@@ -47,10 +47,16 @@ function initBuckets() {
 
 function timeToBucket(time) {
   var hour = time.getHours();
-  var quarter = Math.floor(time.getMinutes()/15);
+  var quarter = Math.floor(time.getMinutes() / 15);
   console.log('hour: ' + hour + ' quarter: ' + quarter);
   // maybe experiment with using absolute quarter timing. that way it's all in one array
-  console.log('absolute quarter: ' hour * 4 + quarter);
+  console.log('absolute quarter: ' + (hour * 4 + quarter));
+}
+
+function bucketToTime(bucketIndex) {
+  var hours = Math.floor(bucketIndex / 4);
+  var minutes = (bucketIndex % 4) * 15;
+  console.log('hours: ' + hours + ', minutes: ' + minutes);
 }
 
 // need to get active buckets from start/end times\
@@ -83,27 +89,30 @@ Schedule.prototype.assignBucketQuantities() {
 }
 
 Schedule.prototype.populateBuckets() {
+  // turn this into a pure function some day
   // go through each bucket and take the quantity and turn them into dates
 
   // for each bucket
   this.buckets.forEach((bucket) => {
     var actionsInBucket = bucket.quantity;
     var workingTime = 15 * 60 - this.minInterval * actionsInBucket;
-    var actions = [];
+    var intervals = [];
     for (var i = 0; i < actionsInBucket; i++) {
-      actions.push(Math.random());
+      intervals.push(Math.random());
     }
-    var sumRandom = actions.reduce((tot, val) => { return tot + val; });
-    
-  })
+    var sumRandom = intervals.reduce((tot, val) => { return tot + val; });
+    var bucket.actions = [];
+    for (var i = 0; i < actionsInBucket; i++) {
+      bucket.actions[i] = intervals[i] * workingTime / sumRandom;
+    }
+  });
+  // now each bucket should have a list of actions that should be in seconds from the start of the bucket
 }
 
 Schedule.prototype.generateActionSchedule() {
   // go through each bucket, convert actions in buckets to time and push to Schedule
-  var schedule = [];
-  for (var i = 0; var < 24; i++) {
-    if (this.buckets[i])
-  }
+  // convert bucket number into hours + minutes and then add the content of buckets[i].actions[]
+  var schedule = this.buckets.filter();
 }
 
 function getNextAction() {
