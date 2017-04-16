@@ -30,11 +30,9 @@ function Schedule(type, clientId, params) {
   this.stopTime = params.stopTime;
   this.targetActions = params.targetActions; // this has to be less than resolution * active buckets
   this.actionSchedule = [];
-  this.activeBuckets = [];
+  this.schedulePos = 0;
   this.resolution = params.resolution; // this shows how many actions can be done in a 15 min interval
   this.minInterval = 3; // in seconds
-  this.plan = [];
-  this.planPos = 0;
   this.bucketQuantity = getBucketQuantity(this.startTime, this.stopTime);
 }
 
@@ -76,7 +74,6 @@ function bucketToTime(bucketIndex) {
   var hours = Math.floor(bucketIndex / 4);
   var minutes = (bucketIndex % 4) * 15;
   console.log('hours: ' + hours + ', minutes: ' + minutes);
-  
 }
 
 Schedule.prototype.populateBuckets() {
@@ -85,21 +82,26 @@ Schedule.prototype.populateBuckets() {
   this.buckets.forEach((bucket) => {
     // SET THIS BACK TO bucket.quantity
     // var actionsInBucket = bucket.quantity;
-    var actionsInBucket = 20;
+    var actionsInBucket = 50;
     // var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
     var workingTime = 15 * 60 - 3 * actionsInBucket;
     var intervals = [];
-    for (var i = 0; i < actionsInBucket; i++) {
+    for (var i = 0; i <= actionsInBucket; i++) {
       intervals.push(Math.random());
     }
-    intervals.sort((a, b) => {
-      return parseFloat(a) - parseFloat(b);
-    });
+    // intervals.sort((a, b) => {
+    //   return parseFloat(a) - parseFloat(b);
+    // });
     var sumRandom = intervals.reduce((tot, val) => { return tot + val; });
     var actions = [];
     for (var i = 0; i < actionsInBucket; i++) {
-      actions[i] = intervals[i] * workingTime / sumRandom;
+      actions[i] = intervals[i] * workingTime / sumRandom + 3; // replace with min interval
     }
+    var absActions = [];
+    actions.reduce((tot, val, index) => {
+      return absActions[index] = (tot + val);
+    }, 0);
+    // absActions now contains number of seconds since start of bucket.
   });
   // now each bucket should have a list of actions that should be in seconds from the start of the bucket
 }
