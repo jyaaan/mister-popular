@@ -42,6 +42,7 @@ function initBuckets() {
     var bucket = new Object();
     bucket.absQuarter = i;
     bucket.quantity = 0;
+    bucket.actions = [];
     objBuckets.push(bucket);
   }
   return objBuckets;
@@ -73,20 +74,22 @@ function timeToBucket(time) {
 function bucketToTime(bucketIndex) {
   var hours = Math.floor(bucketIndex / 4);
   var minutes = (bucketIndex % 4) * 15;
-  console.log('hours: ' + hours + ', minutes: ' + minutes);
+  var newDate = new Date(Date.now());
+  return new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), hours, minutes, 0);
 }
 
-Schedule.prototype.populateBuckets() {
+function getScheduleTime(baseTime, seconds) {
+  return new Date(baseTime.getTime() + (seconds * 1000));
+}
+
+Schedule.prototype.populateBuckets = function () {
   // turn this into a pure function some day
   // go through each bucket and take the quantity and turn them into dates
   this.buckets.forEach((bucket) => {
-    // SET THIS BACK TO bucket.quantity
-    // var actionsInBucket = bucket.quantity;
-    var actionsInBucket = 50;
-    // var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
-    var workingTime = 15 * 60 - 3 * actionsInBucket;
+    var actionsInBucket = bucket.quantity;
+    var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
     var intervals = [];
-    for (var i = 0; i <= actionsInBucket; i++) {
+    for (var i = 0; i <= actionsInBucket; i++) { // extra interval necessary to keep final action from always being at end
       intervals.push(Math.random());
     }
     // intervals.sort((a, b) => {
@@ -101,25 +104,27 @@ Schedule.prototype.populateBuckets() {
     actions.reduce((tot, val, index) => {
       return absActions[index] = (tot + val);
     }, 0);
-    // absActions now contains number of seconds since start of bucket.
+    bucket.actions = absActions;
   });
-  // now each bucket should have a list of actions that should be in seconds from the start of the bucket
 }
 
 Schedule.prototype.generateActionPlan = function () {
-  // go through each bucket, convert actions in buckets to time and push to Schedule
-  // convert bucket number into hours + minutes and then add the content of buckets[i].actions[]
   var plan = [];
   this.buckets.forEach((bucket) => {
     if (bucket.quantity > 0) {
-      plan.push(bucket.actions.map((action) => {
-        return bucketToTime(bucket.absQuarter) + action // adding action seconds to the time returned as date object
-      }));
+      var baseTime = bucketToTime(bucket.absQuarter);
+      bucket.actions.map((action) => {
+        plan.push(getScheduleTime(baseTime, action)); // adding action seconds to the time returned as date object
+      });
     }
   })
-  return plan;
+  this.actionSchedule = plan;
   // now we can step through the array returned here to schedule stuff
 }
+
+testSchedule.assignBucketQuantities();
+testSchedule.populateBuckets();
+testSchedule.generateActionPlan();
 
 Schedule.prototype.getNextAction = function () {
   // this will get the index position of the plan
