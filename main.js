@@ -7,6 +7,9 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
+var Schedule = require('./schedule').Schedule;
+var schedule = new Schedule();
+
 function error(err, res, bod) {
   console.log('error: ' + err);
 }
@@ -46,11 +49,11 @@ app.get('/ids', (req, res) => {
     })
 })
 
-app.get('/test', (req, res) => {
+app.get('/insert-ids', (req, res) => {
   twitter.getFollowing()
     .then((data) => {
-      var userObj = pairKeyValue('id', data);
-      database.insertUserIds('clients', userObj)
+      var userObjs = pairKeyValue('id', data);
+      database.insertObjects('clients', userObjs)
       .then((result) => {
         res.send(result);
       });
@@ -75,5 +78,3 @@ function pairKeyValue(key, values) {
     return obj;
   });
 }
-
-// this is to test git error
