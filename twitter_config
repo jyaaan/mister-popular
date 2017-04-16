@@ -1,7 +1,0 @@
-{
-   "consumerKey": "fBCYy7We2pk8Yj8JlgfafLxsm",
-   "consumerSecret": "1UyUroQt3NaWjqSgIkfgiSnWjikwT8JsszfIjjsh6oZUSiRF2N",
-   "accessToken": "862332097-3dn8t0TrRgFueWsURvI9zxYHSyIP6Pk3RZdUol2H",
-   "accessTokenSecret": "QN8Fa1dBd2YP91NrsOT2Ob7WurvPXA9ZrX0b80JZ7tkMO",
-   "callBackUrl": "http://localhost:5760/index.html"
-}

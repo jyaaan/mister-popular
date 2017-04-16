@@ -16,6 +16,8 @@ once scheduled action takes place, set previous buffer action to pending action 
 */
 var scheduler = require('node-schedule');
 
+var testSchedule = new Schedule('follow', 'john', { startTime: Date(), stopTime: Date(), targetActions: 100, resolution: 50 });
+
 function Schedule(type, clientId, params) {
   this.type = type;
   this.buckets = initBuckets();
@@ -72,7 +74,7 @@ function getBucketQuantity(startTime, stopTime) {
 Schedule.prototype.assignBucketQuantities() {
   // get the number of buckets included in time range
   var numberOfBuckets = getBucketQuantity(this.startTime, this.stopTime);
-  vart startBucket = timeToBucket(this.startTime);
+  var startBucket = timeToBucket(this.startTime);
   // get the number of actions to be done
   var actionsToBeDone = this.targetActions;
   // set up function so that random placement will populate buckets
