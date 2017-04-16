@@ -49,6 +49,19 @@ function initBuckets() {
   return objBuckets;
 }
 
+Schedule.prototype.assignBucketQuantities = function () {
+  var numberOfBuckets = getBucketQuantity(this.startTime, this.stopTime);
+  var startBucket = timeToBucket(this.startTime);
+  var actionsToBeDone = this.targetActions;
+  for (var i = 0; i < actionsToBeDone; i++) {
+    var targetBucket;
+    do {
+      targetBucket = startBucket + Math.floor(Math.random() * numberOfBuckets);
+    } while (this.buckets[targetBucket].quantity >= this.resolution)
+    this.buckets[targetBucket].quantity++;
+  }
+}
+
 function getBucketQuantity(startTime, stopTime) {
   return timeToBucket(stopTime) - timeToBucket(startTime);
 }
@@ -63,53 +76,29 @@ function bucketToTime(bucketIndex) {
   var hours = Math.floor(bucketIndex / 4);
   var minutes = (bucketIndex % 4) * 15;
   console.log('hours: ' + hours + ', minutes: ' + minutes);
+  
 }
-
-Schedule.prototype.assignBucketQuantities = function () {
-  // get the number of buckets included in time range
-  var numberOfBuckets = getBucketQuantity(this.startTime, this.stopTime);
-  var startBucket = timeToBucket(this.startTime);
-  // get the number of actions to be done
-  var actionsToBeDone = this.targetActions;
-  // set up function so that random placement will populate buckets
-  // with ceiling values for each bucket.
-  // add: check to see if actionsToBeDone < resolution * numberOfBuckets
-  for (var i = 0; i < actionsToBeDone; i++) {
-    var targetBucket;
-    do {
-      targetBucket = startBucket + Math.floor(Math.random() * numberOfBuckets);
-    } while (this.buckets[targetBucket].quantity >= this.resolution)
-    // increment quantity of actions in this bucket
-    this.buckets[targetBucket].quantity++;
-  }
-
-}
-
-// need to get active buckets from start/end times\
-// - convert time into bucket coordinate
-// - count buckets inclusively from start to end bucket
-// - save number as active buckets
-
-// need to know how many actions to be done in the day
-// need to know max actions per bucket
-// need to randomly distribute actions into bucket
 
 Schedule.prototype.populateBuckets() {
   // turn this into a pure function some day
   // go through each bucket and take the quantity and turn them into dates
-
-  // for each bucket
   this.buckets.forEach((bucket) => {
-    var actionsInBucket = bucket.quantity;
-    var workingTime = 15 * 60 - this.minInterval * actionsInBucket;
+    // SET THIS BACK TO bucket.quantity
+    // var actionsInBucket = bucket.quantity;
+    var actionsInBucket = 20;
+    // var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
+    var workingTime = 15 * 60 - 3 * actionsInBucket;
     var intervals = [];
     for (var i = 0; i < actionsInBucket; i++) {
       intervals.push(Math.random());
     }
+    intervals.sort((a, b) => {
+      return parseFloat(a) - parseFloat(b);
+    });
     var sumRandom = intervals.reduce((tot, val) => { return tot + val; });
-    var bucket.actions = [];
+    var actions = [];
     for (var i = 0; i < actionsInBucket; i++) {
-      bucket.actions[i] = intervals[i] * workingTime / sumRandom;
+      actions[i] = intervals[i] * workingTime / sumRandom;
     }
   });
   // now each bucket should have a list of actions that should be in seconds from the start of the bucket
