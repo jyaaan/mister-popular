@@ -3,7 +3,6 @@ ideas area!
 hot spots
   - enter buckets that will get a higher number of actions upon distribution
   - off by default. can be set manually or randomly, given number of hot spots
-time zone specification
 
 PROCEDURE:
 initialize buckets
@@ -32,8 +31,7 @@ function Schedule(type, clientId, params) {
   this.actionSchedule = [];
   this.schedulePos = 0;
   this.resolution = params.resolution; // this shows how many actions can be done in a 15 min interval
-  this.minInterval = 3; // in seconds
-  this.bucketQuantity = getBucketQuantity(this.startTime, this.stopTime);
+  this.minInterval = 3; // in seconds, it's 900 / resolution
 }
 
 function initBuckets() {
@@ -83,27 +81,26 @@ function getScheduleTime(baseTime, seconds) {
 }
 
 Schedule.prototype.populateBuckets = function () {
-  // turn this into a pure function some day
-  // go through each bucket and take the quantity and turn them into dates
   this.buckets.forEach((bucket) => {
     var actionsInBucket = bucket.quantity;
     var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
     var intervals = [];
+
     for (var i = 0; i <= actionsInBucket; i++) { // extra interval necessary to keep final action from always being at end
       intervals.push(Math.random());
     }
-    // intervals.sort((a, b) => {
-    //   return parseFloat(a) - parseFloat(b);
-    // });
+
     var sumRandom = intervals.reduce((tot, val) => { return tot + val; });
     var actions = [];
     for (var i = 0; i < actionsInBucket; i++) {
-      actions[i] = intervals[i] * workingTime / sumRandom + 3; // replace with min interval
+      actions[i] = intervals[i] * workingTime / sumRandom + this.minInterval;
     }
+
     var absActions = [];
     actions.reduce((tot, val, index) => {
       return absActions[index] = (tot + val);
     }, 0);
+
     bucket.actions = absActions;
   });
 }
@@ -119,26 +116,24 @@ Schedule.prototype.generateActionPlan = function () {
     }
   })
   this.actionSchedule = plan;
-  // now we can step through the array returned here to schedule stuff
+}
+
+Schedule.prototype.getNextActionPos = function () {
+  var now = new Date(Date.now());
+  if (this.schedulePos != -1) {
+    for (var i = this.schedulePos; i < this.actionSchedule.length; i++) {
+      if (this.actionSchedule[i] > now) {
+        return i;
+      }
+    }
+    return -1;
+  }
 }
 
 testSchedule.assignBucketQuantities();
 testSchedule.populateBuckets();
 testSchedule.generateActionPlan();
-
-Schedule.prototype.getNextAction = function () {
-  // this will get the index position of the plan
-  // each action object will have a boolean to determine if it's been read
-  var now = new Date(Date.now());
-  // this might not work
-  var futureActions = this.plan.filter((action) => {
-    return action > now;
-  })
-  if (futureActions.length > 0) {
-    return
-  }
-  // set bool to read
-}
+testSchedule.schedulePos = testSchedule.getNextActionPos();
 
 Schedule.prototype.scheduleNextAction = function (functionToBeDone, params) {
   // whenever this is run, it will check to see if there is a future action to schedule
@@ -152,8 +147,6 @@ Schedule.prototype.scheduleNextAction = function (functionToBeDone, params) {
   })
 }
 // you have to schedule a refresh at midnight of every day in time zone
-
-// you need a function to initialize everything to put into the daily schedule
 
 exports.Schedule = Schedule;
 
