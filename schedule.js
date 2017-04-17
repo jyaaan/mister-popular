@@ -3,15 +3,6 @@ ideas area!
 hot spots
   - enter buckets that will get a higher number of actions upon distribution
   - off by default. can be set manually or randomly, given number of hot spots
-
-PROCEDURE:
-initialize buckets
-populate buckets with actions at seconds after beginning of buckets
-turn buckets into single array of schedule dates
-find next schedule date (will be set to pending)
-schedule action for pending date and buffer date
-once scheduled action takes place, set previous buffer action to pending action and schedule new buffer action
-
 */
 var scheduler = require('node-schedule');
 
@@ -81,13 +72,12 @@ function getScheduleTime(baseTime, seconds) {
 Schedule.prototype.populateBuckets = function () {
   this.buckets.forEach((bucket) => {
     var actionsInBucket = bucket.quantity;
-    var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
     var intervals = [];
-
     for (var i = 0; i <= actionsInBucket; i++) { // extra interval necessary to keep final action from always being at end
       intervals.push(Math.random());
     }
 
+    var workingTime = 15 * 60 - this.minInterval * actionsInBucket; // in seconds
     var sumRandom = intervals.reduce((tot, val) => { return tot + val; });
     var actions = [];
     for (var i = 0; i < actionsInBucket; i++) {
@@ -138,6 +128,7 @@ Schedule.prototype.scheduleNextAction = function (action) {
     this.incrementAction();
     this.scheduleNextAction(action);
   }
+
   if (this.schedulePos !== -1){
     scheduler.scheduleJob(nextActionDate, cb.bind(this));
   }
