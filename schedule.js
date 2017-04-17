@@ -147,7 +147,6 @@ Schedule.prototype.scheduleActions = function (functionToBeDone) {
         if (index == -1) {
           resolve('done');
         } else {
-          functionToBeDone();
           this.scheduleNextAction(functionToBeDone, cb.bind(this));
         }
       }
@@ -158,23 +157,7 @@ Schedule.prototype.scheduleActions = function (functionToBeDone) {
         console.log('blip');
       });
   });
-
-  // for (var i = this.getNextActionPos(); i < this.actionSchedule.length; i++) {
-  //   var thisActionDate = this.actionSchedule[i];
-  //   console.log('next action at: ' + thisActionDate);
-  //   var nextAction = new Promise((resolve, reject) => {
-  //     resolve(scheduler.scheduleJob(thisActionDate, functionToBeDone));
-  //   })
-  //     .then((job) => {
-  //       console.log('successful loop for index: ' + i);
-  //     })
-  //     .catch(() => {
-  //       console.log('unsuccessful loop');
-  //     });
-  // }
-
 }
-// you have to schedule a refresh at midnight of every day in time zone
 
 Schedule.prototype.scheduleNextAction = function (functionToBeDone, cb) {
   var thisActionDate = this.actionSchedule[this.schedulePos];
@@ -194,7 +177,7 @@ testSchedule.schedulePos = testSchedule.getNextActionPos();
 console.log(testSchedule.actionSchedule[testSchedule.schedulePos]);
 var mission = testSchedule.scheduleActions(() => {
   console.log('blop');
-  console.log(testSchedule.schedulePos);
+  console.log(testSchedule.schedulePos + ' out of ' + testSchedule.actionSchedule.length);
 });
 
 
