@@ -4,7 +4,7 @@ exports.up = function(knex, Promise) {
     table.string('client_id');
     table.string('user_id');
     table.boolean('following');
-    table.timestamp('follow_ts');
+    table.timestamp('last_follow_ts');
     table.boolean('followed_by');
     table.boolean('unfollowed');
   });
