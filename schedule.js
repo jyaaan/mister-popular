@@ -19,7 +19,7 @@ var dateToday = new Date(Date.now());
 var yearToday = dateToday.getFullYear();
 var monthToday = dateToday.getMonth();
 var dayToday = dateToday.getDate();
-var testSchedule = new Schedule('follow', 'john', { startTime: new Date(yearToday, monthToday, dayToday, 16, 0, 0), stopTime: new Date(yearToday, monthToday, dayToday, 22, 30, 0), targetActions: 1000, resolution: 50 });
+var testSchedule = new Schedule('follow', 'john', { startTime: new Date(yearToday, monthToday, dayToday, 17, 0, 0), stopTime: new Date(yearToday, monthToday, dayToday, 23, 30, 0), targetActions: 1000, resolution: 50 });
 
 function Schedule(type, clientId, params) {
   this.type = type;
@@ -182,28 +182,3 @@ var mission = testSchedule.scheduleActions(() => {
 
 
 exports.Schedule = Schedule;
-
-/*
-create buckets > populate buckets with spacing > turn all buckets into array of date objects.
-there will be an array of times as date objects
-initial will look to find next action
-
-randomizer:
-take 15 mins - total_agg_min_time = what we have to work with
-split ^ into actions_in_bucket random parts.
-
-how do you break something into pieces that add up to a specific total?
-take value and split into action_in_bucket parts. use this as ratio.
-
-if you have x events, you need x + 1 random numbers, each with a minimum value of z
-the working_time you have is total_time (15 minutes in our case) - (z * (x+1))
-find the value of x + 1 random values of 0 to 1, and the sum should be made equal to working_time
-value_to_add(q) = ( value / sum_of_randoms ) = ( q / working_time )
-so
-q = ( value * working_time / sum_of_randoms )
-the random value will be made proportional to working_time and added to z
-this is the spacing, store these values into an array
-event[n] will happen AFTER interval[n]
-
-function will always schedule action function and look for next action to schedule
-*/
