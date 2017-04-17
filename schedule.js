@@ -128,40 +128,19 @@ Schedule.prototype.getNextActionPos = function () {
   }
 }
 
-Schedule.prototype.scheduleActions = function (functionToBeDone) {
-  console.log('scheduling...');
-  if (this.schedulePos == -1) return console.log('not in range');
-  var thisActionDate = this.actionSchedule[this.schedulePos];
-  scheduler.scheduleJob(thisActionDate, () => {
-    functionToBeDone();
-    this.incrementAction();
-
-    var schedulePromise = new Promise((resolve, reject) => {
-      function cb(functionToBeDone, index) {
-        if (index == -1) {
-          resolve('done');
-        } else {
-          this.scheduleNextAction(functionToBeDone, cb.bind(this));
-        }
-      }
-      this.scheduleNextAction(functionToBeDone, cb.bind(this));
-    })
-      .then((message) => {
-        console.log(message);
-        console.log('blip');
-      });
-  });
-}
-
-Schedule.prototype.scheduleNextAction = function (functionToBeDone, cb) {
-  var thisActionDate = this.actionSchedule[this.schedulePos];
+Schedule.prototype.scheduleNextAction = function (action) {
+  var nextActionDate = this.actionSchedule[this.schedulePos];
   console.log('scheduling next');
   console.log(thisActionDate);
-  scheduler.scheduleJob(thisActionDate, () => {
-    functionToBeDone();
+
+  function cb() {
+    action();
     this.incrementAction();
-    cb(functionToBeDone, this.schedulePos);
-  });
+    this.scheduleNextAction(action);
+  }
+  if (this.schedulePos !== -1){
+    scheduler.scheduleJob(nextActionDate, cb.bind(this));
+  }
 }
 
 exports.Schedule = Schedule;
