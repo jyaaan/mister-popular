@@ -30,6 +30,22 @@ Database.prototype.refreshUnfollowList = function (clientId) {
 
 }
 
+Database.prototype.logAction = function () {
+
+}
+
+Database.prototype.createRelationship = function () {
+
+}
+
+Database.prototype.updateRelationship = function () {
+
+}
+
+Database.prototype.checkForChanges = function () {
+  
+}
+
 Database.prototype.insertObjects = function (tableName, arrObjData) {
   return knex.transaction((trx) => {
     return knex.batchInsert(tableName, arrObjData)
