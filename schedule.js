@@ -15,12 +15,6 @@ once scheduled action takes place, set previous buffer action to pending action 
 */
 var scheduler = require('node-schedule');
 
-var dateToday = new Date(Date.now());
-var yearToday = dateToday.getFullYear();
-var monthToday = dateToday.getMonth();
-var dayToday = dateToday.getDate();
-var testSchedule = new Schedule('follow', 'john', { startTime: new Date(yearToday, monthToday, dayToday, 17, 0, 0), stopTime: new Date(yearToday, monthToday, dayToday, 23, 30, 0), targetActions: 1000, resolution: 50 });
-
 function Schedule(type, clientId, params) {
   this.type = type;
   this.buckets = initBuckets();
@@ -169,16 +163,5 @@ Schedule.prototype.scheduleNextAction = function (functionToBeDone, cb) {
     cb(functionToBeDone, this.schedulePos);
   });
 }
-
-testSchedule.assignBucketQuantities();
-testSchedule.populateBuckets();
-testSchedule.generateActionPlan();
-testSchedule.schedulePos = testSchedule.getNextActionPos();
-console.log(testSchedule.actionSchedule[testSchedule.schedulePos]);
-var mission = testSchedule.scheduleActions(() => {
-  console.log('blop');
-  console.log(testSchedule.schedulePos + ' out of ' + testSchedule.actionSchedule.length);
-});
-
 
 exports.Schedule = Schedule;
