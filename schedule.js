@@ -19,7 +19,7 @@ var dateToday = new Date(Date.now());
 var yearToday = dateToday.getFullYear();
 var monthToday = dateToday.getMonth();
 var dayToday = dateToday.getDate();
-var testSchedule = new Schedule('follow', 'john', { startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0), stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0), targetActions: 500, resolution: 50 });
+var testSchedule = new Schedule('follow', 'john', { startTime: new Date(yearToday, monthToday, dayToday, 16, 0, 0), stopTime: new Date(yearToday, monthToday, dayToday, 22, 30, 0), targetActions: 1000, resolution: 50 });
 
 function Schedule(type, clientId, params) {
   this.type = type;
@@ -32,6 +32,10 @@ function Schedule(type, clientId, params) {
   this.schedulePos = 0;
   this.resolution = params.resolution; // this shows how many actions can be done in a 15 min interval
   this.minInterval = 3; // in seconds, it's 900 / resolution
+}
+
+Schedule.prototype.incrementAction = function () {
+  this.schedulePos = this.getNextActionPos();
 }
 
 function initBuckets() {
@@ -130,23 +134,69 @@ Schedule.prototype.getNextActionPos = function () {
   }
 }
 
+Schedule.prototype.scheduleActions = function (functionToBeDone) {
+  console.log('scheduling...');
+  if (this.schedulePos == -1) return console.log('not in range');
+  var thisActionDate = this.actionSchedule[this.schedulePos];
+  scheduler.scheduleJob(thisActionDate, () => {
+    functionToBeDone();
+    this.incrementAction();
+
+    var schedulePromise = new Promise((resolve, reject) => {
+      function cb(functionToBeDone, index) {
+        if (index == -1) {
+          resolve('done');
+        } else {
+          functionToBeDone();
+          this.scheduleNextAction(functionToBeDone, cb.bind(this));
+        }
+      }
+      this.scheduleNextAction(functionToBeDone, cb.bind(this));
+    })
+      .then((message) => {
+        console.log(message);
+        console.log('blip');
+      });
+  });
+
+  // for (var i = this.getNextActionPos(); i < this.actionSchedule.length; i++) {
+  //   var thisActionDate = this.actionSchedule[i];
+  //   console.log('next action at: ' + thisActionDate);
+  //   var nextAction = new Promise((resolve, reject) => {
+  //     resolve(scheduler.scheduleJob(thisActionDate, functionToBeDone));
+  //   })
+  //     .then((job) => {
+  //       console.log('successful loop for index: ' + i);
+  //     })
+  //     .catch(() => {
+  //       console.log('unsuccessful loop');
+  //     });
+  // }
+
+}
+// you have to schedule a refresh at midnight of every day in time zone
+
+Schedule.prototype.scheduleNextAction = function (functionToBeDone, cb) {
+  var thisActionDate = this.actionSchedule[this.schedulePos];
+  console.log('scheduling next');
+  console.log(thisActionDate);
+  scheduler.scheduleJob(thisActionDate, () => {
+    functionToBeDone();
+    this.incrementAction();
+    cb(functionToBeDone, this.schedulePos);
+  });
+}
+
 testSchedule.assignBucketQuantities();
 testSchedule.populateBuckets();
 testSchedule.generateActionPlan();
 testSchedule.schedulePos = testSchedule.getNextActionPos();
+console.log(testSchedule.actionSchedule[testSchedule.schedulePos]);
+var mission = testSchedule.scheduleActions(() => {
+  console.log('blop');
+  console.log(testSchedule.schedulePos);
+});
 
-Schedule.prototype.scheduleNextAction = function (functionToBeDone, params) {
-  // whenever this is run, it will check to see if there is a future action to schedule
-  // if there is, schedule it and return the schedule object.
-
-  // function to get the next action
-  return scheduler.scheduleJob( , () => {
-    //function to mark this action as done
-    this.scheduleNextAction();
-    functionToBeDone();
-  })
-}
-// you have to schedule a refresh at midnight of every day in time zone
 
 exports.Schedule = Schedule;
 
