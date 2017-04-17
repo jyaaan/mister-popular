@@ -22,6 +22,14 @@ Database.prototype.getUserIds = function (tableName) {
   return knex(tableName).select('id');
 }
 
+Database.prototype.getQueryUserIds = function (tableName, params) {
+
+}
+
+Database.prototype.refreshUnfollowList = function (clientId) {
+
+}
+
 Database.prototype.insertObjects = function (tableName, arrObjData) {
   return knex.transaction((trx) => {
     return knex.batchInsert(tableName, arrObjData)
@@ -38,3 +46,18 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
 }
 
 exports.Database = Database;
+
+
+/*
+getting all users belonging to client who can be unfollowed
+
+SELECT userId
+FROM relationships
+WHERE (clientId = clientId
+AND   follow_date <= today - waitInterval
+AND   unfollowed = false);
+
+what to do when you unfollow someone
+UPDATE unfollowed
+FROM
+*/
