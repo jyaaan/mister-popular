@@ -15,6 +15,7 @@ function Twitter() {
     this.accessToken = config.accessToken;
     this.accessTokenSecret = config.accessTokenSecret;
     this.callBackUrl = config.callBackUrl;
+    this.userId = config.userId;
     this.baseUrl = 'https://api.twitter.com/1.1';
     this.oauth = new OAuth(
       'https://api.twitter.com/oauth/request_token',
@@ -64,9 +65,20 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 // GET
 
-Twitter.prototype.getFollowing = function () {
+Twitter.prototype.getFollowing = function (params) {
   console.log('getting all following');
-  var path = '/friends/ids.json';
+  var path = '/friends/ids.json' + this.buildQS(params);
+  var url = this.baseUrl + path;
+  console.log(url);
+  return this.doRequests(url)
+    .then((data) => {
+      return data[0];
+    })
+}
+
+Twitter.prototype.getFollowedBy = function (params) {
+  console.log('getting all followed by');
+  var path = '/followers/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
   return this.doRequests(url)
@@ -93,10 +105,10 @@ Twitter.prototype.getRateLimits = function (error, success) {
 
 Twitter.prototype.postFollow = function (params) {
   console.log('posting follow');
-  var path = '/friendships/destroy.json' + this.buildQS(params);
+  var path = '/friendships/create.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  this.doPost(url, {})
+  return this.doPost(url, {})
     .then((result) => {
       return result;
     });
@@ -104,10 +116,10 @@ Twitter.prototype.postFollow = function (params) {
 
 Twitter.prototype.postUnfollow = function (params) {
   console.log('posting unfollow');
-  var path = '/friendships/create.json' + this.buildQS(params);
+  var path = '/friendships/destroy.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  this.doPost(url, {})
+  return this.doPost(url, {})
     .then((result) => {
       return result;
     });

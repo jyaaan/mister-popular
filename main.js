@@ -27,7 +27,7 @@ app.get('/limits', (req, res) => {
 })
 
 app.get('/following', (req, res) => {
-  twitter.getFollowing()
+  twitter.getFollowing({ user_id: twitter.userId })
     .then((data) => {
       res.send(data);
     });
@@ -45,7 +45,7 @@ app.get('/follow/:userId', (req, res) => {
 })
 
 app.get('/unfollow/:userId', (req, res) => {
-    twitter.postUnfollow({ userId: req.params.userId})
+    twitter.postUnfollow({ user_id: req.params.userId })
       .then((result) => {
         res.send(result);
       })
@@ -81,17 +81,24 @@ app.get('/clear/:tableName', (req, res) => {
     });
 })
 
+app.get('/getFollowedBy', (req, res) => {
+  twitter.getFollowedBy({ user_id: twitter.userId })
+    .then((data) => {
+      res.send(data);
+    });
+})
+
 app.get('/getAllUserIds', (req, res) => {
   var followingIds = [];
-  twitter.getFollowing()
+  twitter.getFollowing({ user_id: twitter.userId })
     .then((data) => {
       followingIds.push(data);
     });
   var followedByIds = [];
-  twitter.getFollowedBy()
+  twitter.getFollowedBy({ user_id: twitter.userId })
     .then((data) => {
       followedByIds.push(data);
-    })
+    });
 
   // DUPLICATE REMOVAL HERE
   var allIds = [];
