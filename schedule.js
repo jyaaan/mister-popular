@@ -121,7 +121,7 @@ Schedule.prototype.getNextActionPos = function () {
 Schedule.prototype.scheduleNextAction = function (action) {
   var nextActionDate = this.actionSchedule[this.schedulePos];
   console.log('scheduling next');
-  console.log(thisActionDate);
+  console.log(nextActionDate);
 
   function cb() {
     action();
