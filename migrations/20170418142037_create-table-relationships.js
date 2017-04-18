@@ -6,6 +6,7 @@ exports.up = function(knex, Promise) {
     table.timestamp('last_follow_ts');
     table.boolean('followed_by');
     table.boolean('unfollowed');
+    table.boolean('locked');
   });
 
   return query;

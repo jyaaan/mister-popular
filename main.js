@@ -123,12 +123,11 @@ function generateRelationships(objIds, clientId) {
     var tempRelationships = {};
     tempRelationships.client_id = clientId;
     tempRelationships.user_id = user;
-    // tempRelationships.last_follow_ts = null;
+    tempRelationships.locked = false;
     if (objIds.following.indexOf(user) > -1) tempRelationships.last_follow_ts = tempFollowingDate.toISOString();
     tempRelationships.following = (objIds.following.indexOf(user) > -1);
     tempRelationships.followed_by = (objIds.followedBy.indexOf(user) > -1);
     tempRelationships.unfollowed = false;
-    // console.log(tempRelationships);
     objRelationships.push(tempRelationships);
   })
   return objRelationships;
