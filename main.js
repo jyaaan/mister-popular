@@ -22,6 +22,12 @@ function showScreenName(data) {
   console.log(data.screen_name);
 }
 
+function spliceDupilcates(arr) {
+  return arr.filter( (item, index, array) => {
+    return array.indexOf(item) == index;
+  });
+}
+
 app.get('/limits', (req, res) => {
   twitter.getRateLimits(error, success);
 })
@@ -64,7 +70,7 @@ app.get('/ids', (req, res) => {
 })
 
 app.get('/insert-ids', (req, res) => {
-  twitter.getFollowing()
+  twitter.getFollowing({ user_id: twitter.userId })
     .then((data) => {
       var userObjs = pairKeyValue('id', data);
       database.insertObjects('clients', userObjs)
@@ -90,19 +96,26 @@ app.get('/getFollowedBy', (req, res) => {
 
 app.get('/getAllUserIds', (req, res) => {
   var followingIds = [];
+  var followedByIds = [];
   twitter.getFollowing({ user_id: twitter.userId })
     .then((data) => {
-      followingIds.push(data);
-    });
-  var followedByIds = [];
-  twitter.getFollowedBy({ user_id: twitter.userId })
-    .then((data) => {
-      followedByIds.push(data);
-    });
-
-  // DUPLICATE REMOVAL HERE
-  var allIds = [];
-  res.send(allIds);
+      followingIds = data;
+      console.log('following: ' + followingIds.length);
+    })
+    .then(() => {
+      twitter.getFollowedBy({ user_id: twitter.userId })
+      .then((data) => {
+        followedByIds = data;
+        console.log('followed by: ' + followedByIds.length);
+      })
+      .then(() => {
+        var allIds = followingIds.concat(followedByIds);
+        console.log('all ids before splicing: ' + allIds.length);
+        allIds = spliceDupilcates(allIds);
+        console.log('all ids after splicing: ' + allIds.length);
+        res.send('OK');
+      })
+    })
 })
 
 
