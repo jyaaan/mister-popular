@@ -94,29 +94,45 @@ app.get('/getFollowedBy', (req, res) => {
     });
 })
 
-app.get('/getAllUserIds', (req, res) => {
+app.get('/initialize', (req, res) => {
+  var allUserIds = [];
+  getAllUserIds(twitter.clientId)
+    .then((allIds) => {
+      allUserIds = pairKeyValue('id', allIds);
+      database.insertObjects('clients', allUserIds)
+        .then((result) => {
+          res.send(result);
+        })
+    })
+})
+
+function getAllUserIds(clientId) {
   var followingIds = [];
   var followedByIds = [];
-  twitter.getFollowing({ user_id: twitter.userId })
+  return new Promise((resolve, reject) => {
+    twitter.getFollowing({ user_id: clientId })
     .then((data) => {
       followingIds = data;
       console.log('following: ' + followingIds.length);
+      return 'ok';
     })
     .then(() => {
-      twitter.getFollowedBy({ user_id: twitter.userId })
+      twitter.getFollowedBy({ user_id: clientId })
       .then((data) => {
         followedByIds = data;
         console.log('followed by: ' + followedByIds.length);
+        return 'ok';
       })
       .then(() => {
         var allIds = followingIds.concat(followedByIds);
         console.log('all ids before splicing: ' + allIds.length);
         allIds = spliceDupilcates(allIds);
         console.log('all ids after splicing: ' + allIds.length);
-        res.send('OK');
+        resolve(allIds);
       })
-    })
-})
+    });
+  });
+}
 
 app.listen(5760, () => {
   console.log('listening to port 5760');

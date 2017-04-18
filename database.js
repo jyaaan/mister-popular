@@ -47,21 +47,23 @@ initialize all users (FIRST TIME ONLY)
         -followedby = false;
 
 unfollow someone
-  -on action, generate unfollow array and get one id to unfollow
+  -on action, get one id to unfollow
   -if there  isn't anything, do nothing for this turn
-  -if there is an id, unfollow that person
+  -if there is an id, lock that relationship and attempt to unfollow that person
   -on success, update relationship
     -following = false;
     -unfollowed = true;
+    -locked = false;
   -log action;
 
-generate unfollow list
-  -query relationships table for users for client where:
+get unfollow userid
+  -query relationships table for a user for client where:
     -client_id = clientId;
     -followed_by = false;
     -following = true;
     -follow_timestamp < now - 72 hours
-  -return this list
+    -locked = false
+  -return user id of match
 
 */
 
@@ -89,7 +91,11 @@ Database.prototype.getQueryUserIds = function (tableName, params) {
 
 }
 
-Database.prototype.refreshUnfollowList = function (clientId) {
+Database.prototype.getNextUnfollow = function (clientId) {
+
+}
+
+Database.prototype.lockRelationship = function (clientId, userId) {
 
 }
 
@@ -97,7 +103,7 @@ Database.prototype.logAction = function () {
 
 }
 
-Database.prototype.createRelationship = function () {
+Database.prototype.createRelationship = function (clientId, userId) {
 
 }
 
@@ -117,7 +123,8 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
       .catch(trx.rollback);
   })
     .then(() => {
-      console.log('transaction successful');
+      console.log('transaction successful')
+      return 'transaction successful';
     })
     .catch(() => {
       console.log('transaction failed');

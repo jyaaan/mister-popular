@@ -15,7 +15,7 @@ function Twitter() {
     this.accessToken = config.accessToken;
     this.accessTokenSecret = config.accessTokenSecret;
     this.callBackUrl = config.callBackUrl;
-    this.userId = config.userId;
+    this.clientId = config.clientId;
     this.baseUrl = 'https://api.twitter.com/1.1';
     this.oauth = new OAuth(
       'https://api.twitter.com/oauth/request_token',
