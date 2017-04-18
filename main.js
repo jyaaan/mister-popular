@@ -99,7 +99,29 @@ app.get('/getFollowedBy', (req, res) => {
 app.get('/nextUnfollow', (req, res) => {
   database.getNextUnfollow(twitter.clientId)
     .then((result) => {
-      res.send(result[0]);
+      var userId = result[0].user_id;
+      database.lockRelationship(twitter.clientId, userId)
+        .then((result) => {
+          console.log('locked');
+        })
+      return userId;
+    })
+    .then((userId) => {
+      twitter.postUnfollow({ user_id: userId })
+        .then((result) => {
+          console.log('successfully unfollowed: ' + userId);
+        })
+      return userId;
+    })
+    .then((userId) => {
+      database.updateUnfollow(twitter.clientId, userId)
+        .then((result) => {
+          console.log('unfollowed');
+        })
+      return 'complete';
+    })
+    .then((message) => {
+      res.send('complete');
     })
 })
 

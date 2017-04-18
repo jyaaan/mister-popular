@@ -119,10 +119,13 @@ Twitter.prototype.postUnfollow = function (params) {
   var path = '/friendships/destroy.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  return this.doPost(url, {})
-    .then((result) => {
-      return result;
-    });
+  // return this.doPost(url, {})
+  //   .then((result) => {
+  //     return result;
+  //   });
+  return new Promise((resolve, reject) => {
+    resolve('yay');
+  })
 }
 
 // DO FUNCTIONS

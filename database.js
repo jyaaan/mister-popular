@@ -96,13 +96,28 @@ Database.prototype.getNextUnfollow = function (clientId) {
     .where('client_id', clientId)
     .andWhere('following', true)
     .andWhere('followed_by', false)
+    .andWhere('locked', false)
     .andWhere('last_follow_ts', '<', new Date(Date.now()).toISOString())
     .select('user_id')
     .limit(1)
 }
 
 Database.prototype.lockRelationship = function (clientId, userId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update({
+      locked: true
+    })
+}
 
+Database.prototype.unlockRelationship = function (clientId, userId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update({
+      locked: false
+    })
 }
 
 Database.prototype.logAction = function () {
@@ -113,8 +128,14 @@ Database.prototype.createRelationship = function (clientId, userId) {
 
 }
 
-Database.prototype.updateRelationship = function () {
-
+Database.prototype.updateUnfollow = function (clientId, userId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update({
+      unfollowed: true,
+      following: false
+    })
 }
 
 Database.prototype.checkForChanges = function () {
