@@ -97,14 +97,37 @@ app.get('/getFollowedBy', (req, res) => {
 app.get('/initialize', (req, res) => {
   var allUserIds = [];
   getAllUserIds(twitter.clientId)
-    .then((allIds) => {
-      allUserIds = pairKeyValue('id', allIds);
-      database.insertObjects('clients', allUserIds)
+    .then((objIds) => {
+      allUserIds = pairKeyValue('id', objIds.all);
+      database.insertObjects('users', allUserIds)
         .then((result) => {
-          res.send(result);
-        })
+
+        });
+      return objIds;
+    })
+    .then((objIds) => {
+      res.send(generateRelationships(objIds, twitter.clientId));
     })
 })
+
+function generateRelationships(objIds, clientId) {
+  var objRelationships = [];
+  objIds.all.forEach((user) => {
+    var tempRelationships = {};
+    tempRelationships.client_id = clientId;
+    tempRelationships.user_id = user;
+    tempRelationships.following = (objIds.following.indexOf(user) > -1);
+    tempRelationships.followed_by = (objIds.followedBy.indexOf(user) > -1);
+    tempRelationships.unfollowed = false;
+    console.log(tempRelationships);
+    objRelationships.push(tempRelationships);
+  })
+  return 'relationships generated';
+}
+
+function contains(queryId) {
+
+}
 
 function getAllUserIds(clientId) {
   var followingIds = [];
@@ -128,7 +151,12 @@ function getAllUserIds(clientId) {
         console.log('all ids before splicing: ' + allIds.length);
         allIds = spliceDupilcates(allIds);
         console.log('all ids after splicing: ' + allIds.length);
-        resolve(allIds);
+        var objIds = {
+          following: followingIds,
+          followedBy: followedByIds,
+          all: allIds
+        };
+        resolve(objIds);
       })
     });
   });
