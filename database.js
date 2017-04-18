@@ -92,7 +92,13 @@ Database.prototype.getQueryUserIds = function (tableName, params) {
 }
 
 Database.prototype.getNextUnfollow = function (clientId) {
-
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('following', true)
+    .andWhere('followed_by', false)
+    .andWhere('last_follow_ts', '<', new Date(Date.now()).toISOString())
+    .select('user_id')
+    .limit(1)
 }
 
 Database.prototype.lockRelationship = function (clientId, userId) {

@@ -96,6 +96,13 @@ app.get('/getFollowedBy', (req, res) => {
     });
 })
 
+app.get('/nextUnfollow', (req, res) => {
+  database.getNextUnfollow(twitter.clientId)
+    .then((result) => {
+      res.send(result[0]);
+    })
+})
+
 app.get('/initialize', (req, res) => {
   var allUserIds = [];
   getAllUserIds(twitter.clientId)
