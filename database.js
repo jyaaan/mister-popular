@@ -128,6 +128,7 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
     })
     .catch(() => {
       console.log('transaction failed');
+      return 'transaction failed';
     });
 }
 

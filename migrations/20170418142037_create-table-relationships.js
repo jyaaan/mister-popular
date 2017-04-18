@@ -1,4 +1,3 @@
-
 exports.up = function(knex, Promise) {
   const query = knex.schema.createTable('relationships', table => {
     table.string('client_id');

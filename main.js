@@ -7,6 +7,8 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
+var tempFollowingDate = new Date(2017, 3, 15, 9, 0, 0);
+
 // var Schedule = require('./schedule').Schedule;
 // var schedule = new Schedule();
 
@@ -106,7 +108,12 @@ app.get('/initialize', (req, res) => {
       return objIds;
     })
     .then((objIds) => {
-      res.send(generateRelationships(objIds, twitter.clientId));
+      var batchObj = generateRelationships(objIds, twitter.clientId);
+      console.log(batchObj);
+      database.insertObjects('relationships', batchObj)
+        .then((result) => {
+          res.send(result);
+        })
     })
 })
 
@@ -116,13 +123,15 @@ function generateRelationships(objIds, clientId) {
     var tempRelationships = {};
     tempRelationships.client_id = clientId;
     tempRelationships.user_id = user;
+    // tempRelationships.last_follow_ts = null;
+    if (objIds.following.indexOf(user) > -1) tempRelationships.last_follow_ts = tempFollowingDate.toISOString();
     tempRelationships.following = (objIds.following.indexOf(user) > -1);
     tempRelationships.followed_by = (objIds.followedBy.indexOf(user) > -1);
     tempRelationships.unfollowed = false;
-    console.log(tempRelationships);
+    // console.log(tempRelationships);
     objRelationships.push(tempRelationships);
   })
-  return 'relationships generated';
+  return objRelationships;
 }
 
 function contains(queryId) {
