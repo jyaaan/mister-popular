@@ -118,7 +118,6 @@ app.get('/getAllUserIds', (req, res) => {
     })
 })
 
-
 app.listen(5760, () => {
   console.log('listening to port 5760');
 })
