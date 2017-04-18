@@ -133,10 +133,6 @@ function generateRelationships(objIds, clientId) {
   return objRelationships;
 }
 
-function contains(queryId) {
-
-}
-
 function getAllUserIds(clientId) {
   var followingIds = [];
   var followedByIds = [];
