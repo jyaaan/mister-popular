@@ -147,8 +147,16 @@ app.get('/search/:query', (req, res) => {
           searchIds.push(status.user.id);
         }
       })
-      res.send(searchIds);
-    });
+      return searchIds;
+    })
+    .then((searchIds) => {
+      database.getFollowedBy(twitter.clientId)
+        .then((result) => {
+          console.log(result);
+          var trimmedSearchIds = getUniqueIdsInA(searchIds, result)
+          res.send(trimmedSearchIds)
+        })
+    })
 })
 
 app.get('/initialize', (req, res) => {
