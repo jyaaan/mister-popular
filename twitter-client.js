@@ -15,6 +15,7 @@ function Twitter() {
     this.accessToken = config.accessToken;
     this.accessTokenSecret = config.accessTokenSecret;
     this.callBackUrl = config.callBackUrl;
+    this.clientId = config.clientId;
     this.baseUrl = 'https://api.twitter.com/1.1';
     this.oauth = new OAuth(
       'https://api.twitter.com/oauth/request_token',
@@ -64,9 +65,9 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 // GET
 
-Twitter.prototype.getFollowing = function () {
+Twitter.prototype.getFollowing = function (params) {
   console.log('getting all following');
-  var path = '/friends/ids.json';
+  var path = '/friends/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
   return this.doRequests(url)
@@ -75,41 +76,87 @@ Twitter.prototype.getFollowing = function () {
     })
 }
 
-Twitter.prototype.getAccountSettings = function (params, error, success) {
+Twitter.prototype.getFollowedBy = function (params) {
+  console.log('getting all followed by');
+  var path = '/followers/ids.json' + this.buildQS(params);
+  var url = this.baseUrl + path;
+  console.log(url);
+  return this.doRequests(url)
+    .then((data) => {
+      return data[0];
+    })
+}
+
+Twitter.prototype.getAccountSettings = function (params) {
   console.log('getting account settings');
   var path = '/account/settings.json';
   var url = this.baseUrl + path;
   console.log(url);
-    this.doRequest(url, error, success);
+  this.doRequest(url)
+    .then((result) => {
+      console.log(result);
+    });
 }
 
-Twitter.prototype.getRateLimits = function (error, success) {
+Twitter.prototype.getRateLimits = function () {
   console.log('getting limits');
   var path = '/application/rate_limit_status.json';
   var url = this.baseUrl + path;
-  this.doRequest(url, error, success);
+  this.doRequest(url)
+    .then((result) => {
+      console.log(result);
+    });
+}
+
+Twitter.prototype.getSearch = function (params) {
+  params.count = 10;
+  var path = '/search/tweets.json' + this.buildQS(params);
+  var url = this.baseUrl + path;
+  return this.doRequest(url)
+    .then((result) => {
+      return result;
+    })
 }
 // POST
 
-Twitter.prototype.postFollow = function (params, error, success) {
+Twitter.prototype.postFollow = function (params) {
   console.log('posting follow');
   var path = '/friendships/create.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  this.doPost(url, {}, error, success);
+  return this.doPost(url, {})
+    .then((result) => {
+      return result;
+    });
+}
+
+Twitter.prototype.postUnfollow = function (params) {
+  console.log('posting unfollow');
+  var path = '/friendships/destroy.json' + this.buildQS(params);
+  var url = this.baseUrl + path;
+  console.log(url);
+  // return this.doPost(url, {})
+  //   .then((result) => {
+  //     return result;
+  //   });
+  return new Promise((resolve, reject) => {
+    resolve('yay');
+  })
 }
 
 // DO FUNCTIONS
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = formatUrl(url);
-  this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
-    if(!err && res.statusCode == 200) {
-      success(bod);
-    } else {
-      console.error('do request error' + err);
-    }
-  })
+  return new Promise((resolve, reject) => {
+    this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
+      if(!err && res.statusCode == 200) {
+        resolve(JSON.parse(bod));
+      } else {
+        console.error('do request error' + err);
+      }
+    })
+  });
 }
 
 Twitter.prototype.doRequests = function (url) {
@@ -136,16 +183,18 @@ Twitter.prototype.doRequests = function (url) {
   });
 }
 
-Twitter.prototype.doPost = function (url, post_body, error, success) {
+Twitter.prototype.doPost = function (url, post_body) {
   url = formatUrl(url);
-
-  this.oauth.post(url, this.accessToken, this.accessTokenSecret, post_body, 'application/x-www-form-urlencoded', (err, bod, res) => {
-    if (!err && res.statusCode == 200) {
-      success(JSON.parse(bod));
-    } else {
-      console.error('doPost error' + err);
+  return new Promise((resolve, reject) => {
+    function cb(err, bod, res) {
+      if (!err) {
+        resolve(JSON.parse(bod));
+      } else {
+        reject(err);
+      }
     }
-  })
+    this.oauth.post(url, this.accessToken, this.accessTokenSecret, post_body, 'application/x-www-form-urlencoded', cb);
+  });
 }
 
 Twitter.prototype.buildQS = function (params) {

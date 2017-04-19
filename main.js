@@ -1,3 +1,5 @@
+// CAUTION Manual unfollows will not be caught by app
+
 var express = require('express');
 var app = express();
 
@@ -7,8 +9,10 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
-var Schedule = require('./schedule').Schedule;
-var schedule = new Schedule();
+var tempFollowingDate = new Date(2017, 3, 15, 9, 0, 0);
+
+// var Schedule = require('./schedule').Schedule;
+// var schedule = new Schedule();
 
 function error(err, res, bod) {
   console.log('error: ' + err);
@@ -22,12 +26,26 @@ function showScreenName(data) {
   console.log(data.screen_name);
 }
 
+function spliceDupilcates(arr) {
+  return arr.filter((item, index, array) => {
+    return array.indexOf(item) == index;
+  });
+}
+
+function getUniqueIdsInA(arrA, arrB) {
+  return arrA.filter((itemA) => {
+    return arrB.findIndex((itemB) => {
+      return itemB === itemA;
+    }) == -1;
+  })
+}
+
 app.get('/limits', (req, res) => {
   twitter.getRateLimits(error, success);
 })
 
 app.get('/following', (req, res) => {
-  twitter.getFollowing()
+  twitter.getFollowing({ user_id: twitter.userId })
     .then((data) => {
       res.send(data);
     });
@@ -37,8 +55,22 @@ app.get('/settings', (req, res) => {
   twitter.getAccountSettings({}, error, success);
 })
 
-app.get('/follow', (req, res) => {
-  twitter.postFollow({}, error, success);
+app.get('/follow/:userId', (req, res) => {
+  twitter.postFollow({ userId: req.params.userId })
+    .then((result) => {
+      res.send(result);
+    });
+})
+
+app.get('/unfollow/:userId', (req, res) => {
+    twitter.postUnfollow({ user_id: req.params.userId })
+      .then((result) => {
+        res.send(result);
+      })
+      .catch((err) => {
+        console.error(err);
+        res.send(err);
+      })
 })
 
 app.get('/ids', (req, res) => {
@@ -50,7 +82,7 @@ app.get('/ids', (req, res) => {
 })
 
 app.get('/insert-ids', (req, res) => {
-  twitter.getFollowing()
+  twitter.getFollowing({ user_id: twitter.userId })
     .then((data) => {
       var userObjs = pairKeyValue('id', data);
       database.insertObjects('clients', userObjs)
@@ -66,6 +98,175 @@ app.get('/clear/:tableName', (req, res) => {
       res.send(result);
     });
 })
+
+app.get('/getFollowedBy', (req, res) => {
+  twitter.getFollowedBy({ user_id: twitter.userId })
+    .then((data) => {
+      res.send(data);
+    });
+})
+
+app.get('/nextUnfollow', (req, res) => {
+  database.getNextUnfollow(twitter.clientId)
+    .then((result) => {
+      var userId = result[0].user_id;
+      database.lockRelationship(twitter.clientId, userId)
+        .then((result) => {
+          console.log('locked');
+        })
+      return userId;
+    })
+    .then((userId) => {
+      twitter.postUnfollow({ user_id: userId })
+        .then((result) => {
+          database.logAction(twitter.clientId, userId, 'unfollow')
+            .then((result) => {
+              console.log('successfully unfollowed: ' + userId);
+            })
+        })
+      return userId;
+    })
+    .then((userId) => {
+      database.updateUnfollow(twitter.clientId, userId)
+        .then((result) => {
+          console.log('unfollowed');
+        })
+      return 'complete';
+    })
+    .then((message) => {
+      res.send('complete');
+    })
+})
+
+app.get('/search/:query', (req, res) => {
+  twitter.getSearch({ q: req.params.query })
+    .then((result) => {
+      var searchIds = [];
+      result.statuses.forEach((status) => {
+        if (!(status.user.following || status.user.follow_request_sent)) {
+          searchIds.push(status.user.id);
+        }
+      })
+      res.send(searchIds);
+    });
+})
+
+app.get('/initialize', (req, res) => {
+  var allUserIds = [];
+  getAllUserIds(twitter.clientId)
+    .then((objIds) => {
+      allUserIds = pairKeyValue('id', objIds.all);
+      database.insertObjects('users', allUserIds)
+        .then((result) => {
+
+        });
+      return objIds;
+    })
+    .then((objIds) => {
+      var batchObj = generateRelationships(objIds, twitter.clientId);
+      console.log(batchObj);
+      database.insertObjects('relationships', batchObj)
+        .then((result) => {
+          res.send(result);
+        })
+    })
+})
+
+app.get('/changes', (req, res) => {
+  var clientId = twitter.clientId;
+  getAllUserIds(clientId)
+    .then((objIds) => {
+      database.getUserIds('users')
+        .then((result) => {
+          var newIds = getUniqueIdsInA(objIds.all, result);
+          if (newIds.length > 0) {
+            var objNewIds = pairKeyValue('id', newIds);
+            database.insertObjects('users', objNewIds)
+              .then((result) => {
+
+              });
+            return 'ok';
+          }
+        })
+      return objIds;
+    })
+    .then((objIds) => {
+      twitter.getFollowing({ user_id: clientId })
+        .then((data) => {
+          var newFollowing = getUniqueIdsInA(objIds.following, data);
+          if (newFollowing.length > 0) {
+            database.upsertRelationships(clientId, newFollowing, { following: true })
+              .then((result) => {
+
+              });
+          }
+        })
+      return objIds;
+    })
+    .then((objIds) => {
+      twitter.getFollowedBy({ user_id: clientId })
+        .then((data) => {
+          var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data)
+          if (newFollowedBy.length > 0) {
+            database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
+              .then((result) => {
+
+              });
+          }
+        })
+        return 'ok';
+    })
+    res.send('done');
+})
+
+function generateRelationships(objIds, clientId) {
+  var objRelationships = [];
+  objIds.all.forEach((user) => {
+    var tempRelationships = {};
+    tempRelationships.client_id = clientId;
+    tempRelationships.user_id = user;
+    tempRelationships.locked = false;
+    if (objIds.following.indexOf(user) > -1) tempRelationships.last_follow_ts = tempFollowingDate.toISOString();
+    tempRelationships.following = (objIds.following.indexOf(user) > -1);
+    tempRelationships.followed_by = (objIds.followedBy.indexOf(user) > -1);
+    tempRelationships.unfollowed = false;
+    objRelationships.push(tempRelationships);
+  })
+  return objRelationships;
+}
+
+function getAllUserIds(clientId) {
+  var followingIds = [];
+  var followedByIds = [];
+  return new Promise((resolve, reject) => {
+    twitter.getFollowing({ user_id: clientId })
+    .then((data) => {
+      followingIds = data;
+      console.log('following: ' + followingIds.length);
+      return 'ok';
+    })
+    .then(() => {
+      twitter.getFollowedBy({ user_id: clientId })
+      .then((data) => {
+        followedByIds = data;
+        console.log('followed by: ' + followedByIds.length);
+        return 'ok';
+      })
+      .then(() => {
+        var allIds = followingIds.concat(followedByIds);
+        console.log('all ids before splicing: ' + allIds.length);
+        allIds = spliceDupilcates(allIds);
+        console.log('all ids after splicing: ' + allIds.length);
+        var objIds = {
+          following: followingIds,
+          followedBy: followedByIds,
+          all: allIds
+        };
+        resolve(objIds);
+      })
+    });
+  });
+}
 
 app.listen(5760, () => {
   console.log('listening to port 5760');

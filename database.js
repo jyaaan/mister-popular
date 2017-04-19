@@ -1,7 +1,3 @@
-/*
-EXCEPT: following except followers = users not following back
-*/
-
 var knex = require('knex')({
   client: 'postgresql',
   connection: {
@@ -19,14 +15,82 @@ Database.prototype.clearTable = function (tableName) {
 }
 
 Database.prototype.getUserIds = function (tableName) {
-  return knex(tableName).select('id');
+  return new Promise((resolve, reject) => {
+    knex(tableName).select('id')
+      .then((result) => {
+        var ids = result.map((obj) => {
+          return Number(obj.id);
+        })
+        resolve(ids);
+      })
+  });
+
 }
 
 Database.prototype.getQueryUserIds = function (tableName, params) {
 
 }
 
-Database.prototype.refreshUnfollowList = function (clientId) {
+Database.prototype.getNextUnfollow = function (clientId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('following', true)
+    .andWhere('followed_by', false)
+    .andWhere('locked', false)
+    .andWhere('last_follow_ts', '<', new Date(Date.now()).toISOString())
+    .select('user_id')
+    .limit(1)
+}
+
+Database.prototype.lockRelationship = function (clientId, userId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update({
+      locked: true
+    })
+}
+
+Database.prototype.unlockRelationship = function (clientId, userId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update({
+      locked: false
+    })
+}
+
+Database.prototype.logAction = function (clientId, userId, type) {
+  return knex('log')
+    .insert({ client_id: clientId, user_id: userId, action_type: type,
+    timestamp: new Date(Date.now()).toISOString() });
+}
+
+Database.prototype.createRelationship = function (clientId, userId, params) {
+  params.client_id = clientId;
+  params.user_id = userId;
+  return knex('relationships')
+    .insert(params)
+}
+
+Database.prototype.updateRelationship = function (clientId, userId, params) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update(params)
+}
+
+Database.prototype.updateUnfollow = function (clientId, userId) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update({
+      unfollowed: true,
+      following: false
+    })
+}
+
+Database.prototype.checkForChanges = function () {
 
 }
 
@@ -38,26 +102,35 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
       .catch(trx.rollback);
   })
     .then(() => {
-      console.log('transaction successful');
+      console.log('transaction successful')
+      return 'transaction successful';
     })
     .catch(() => {
       console.log('transaction failed');
+      return 'transaction failed';
     });
 }
 
+Database.prototype.upsertRelationships = function (clientId, userIds, params, type) {
+  return new Promise((resolve, reject) => {
+    userIds.forEach((userId) => {
+      knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
+      .then((result) => {
+        if (result > 0) {
+          this.updateRelationship(clientId, userId, params)
+          .then((result) => {
+
+          })
+        } else {
+          this.createRelationship(clientId, userId, params)
+          .then((result) => {
+
+          })
+        }
+      })
+    })
+    resolve('ok');
+  })
+}
+
 exports.Database = Database;
-
-
-/*
-getting all users belonging to client who can be unfollowed
-
-SELECT userId
-FROM relationships
-WHERE (clientId = clientId
-AND   follow_date <= today - waitInterval
-AND   unfollowed = false);
-
-what to do when you unfollow someone
-UPDATE unfollowed
-FROM
-*/

@@ -19,6 +19,10 @@ function Schedule(type, clientId, params) {
   this.minInterval = 3; // in seconds, it's 900 / resolution
 }
 
+// ADD DAILY SCHEDULER HERE
+// reschedules, updates progress with following and follower counts
+
+
 Schedule.prototype.incrementAction = function () {
   this.schedulePos = this.getNextActionPos();
 }
@@ -121,7 +125,7 @@ Schedule.prototype.getNextActionPos = function () {
 Schedule.prototype.scheduleNextAction = function (action) {
   var nextActionDate = this.actionSchedule[this.schedulePos];
   console.log('scheduling next');
-  console.log(thisActionDate);
+  console.log(nextActionDate);
 
   function cb() {
     action();
