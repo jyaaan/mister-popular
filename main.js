@@ -109,7 +109,10 @@ app.get('/nextUnfollow', (req, res) => {
     .then((userId) => {
       twitter.postUnfollow({ user_id: userId })
         .then((result) => {
-          console.log('successfully unfollowed: ' + userId);
+          database.logAction(twitter.clientId, userId, 'unfollow')
+            .then((result) => {
+              console.log('successfully unfollowed: ' + userId);
+            })
         })
       return userId;
     })

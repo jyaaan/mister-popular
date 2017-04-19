@@ -53,8 +53,8 @@ Database.prototype.unlockRelationship = function (clientId, userId) {
 
 Database.prototype.logAction = function (clientId, userId, type) {
   return knex('log')
-    insert({ client_id: clientId, user_id: userId, action_type: type,
-    timestamp: new Date(Date.now()).toISOString() })
+    .insert({ client_id: clientId, user_id: userId, action_type: type,
+    timestamp: new Date(Date.now()).toISOString() });
 }
 
 Database.prototype.createRelationship = function (clientId, userId) {
