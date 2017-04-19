@@ -179,10 +179,6 @@ app.get('/changes', (req, res) => {
       database.getUserIds('users')
         .then((result) => {
           var newIds = getUniqueIdsInA(objIds.all, result);
-          console.log(result);
-          console.log('new ids!');
-          console.log(newIds);
-          console.log('end new');
           if (newIds.length > 0) {
             var objNewIds = pairKeyValue('id', newIds);
             database.insertObjects('users', objNewIds)

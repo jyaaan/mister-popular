@@ -19,6 +19,10 @@ function Schedule(type, clientId, params) {
   this.minInterval = 3; // in seconds, it's 900 / resolution
 }
 
+// ADD DAILY SCHEDULER HERE
+// reschedules, updates progress with following and follower counts
+
+
 Schedule.prototype.incrementAction = function () {
   this.schedulePos = this.getNextActionPos();
 }

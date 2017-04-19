@@ -111,7 +111,7 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
     });
 }
 
-Database.prototype.upsertRelationships = function (clientId, userIds, params) {
+Database.prototype.upsertRelationships = function (clientId, userIds, params, type) {
   return new Promise((resolve, reject) => {
     userIds.forEach((userId) => {
       knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
