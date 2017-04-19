@@ -128,6 +128,19 @@ app.get('/nextUnfollow', (req, res) => {
     })
 })
 
+app.get('/search/:query', (req, res) => {
+  twitter.getSearch({ q: req.params.query })
+    .then((result) => {
+      var searchIds = [];
+      result.statuses.forEach((status) => {
+        if (!(status.user.following || status.user.follow_request_sent)) {
+          searchIds.push(status.user.id);
+        }
+      })
+      res.send(searchIds);
+    });
+})
+
 app.get('/initialize', (req, res) => {
   var allUserIds = [];
   getAllUserIds(twitter.clientId)

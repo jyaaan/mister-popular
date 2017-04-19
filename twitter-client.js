@@ -87,19 +87,35 @@ Twitter.prototype.getFollowedBy = function (params) {
     })
 }
 
-Twitter.prototype.getAccountSettings = function (params, error, success) {
+Twitter.prototype.getAccountSettings = function (params) {
   console.log('getting account settings');
   var path = '/account/settings.json';
   var url = this.baseUrl + path;
   console.log(url);
-    this.doRequest(url, error, success);
+  this.doRequest(url)
+    .then((result) => {
+      console.log(result);
+    });
 }
 
-Twitter.prototype.getRateLimits = function (error, success) {
+Twitter.prototype.getRateLimits = function () {
   console.log('getting limits');
   var path = '/application/rate_limit_status.json';
   var url = this.baseUrl + path;
-  this.doRequest(url, error, success);
+  this.doRequest(url)
+    .then((result) => {
+      console.log(result);
+    });
+}
+
+Twitter.prototype.getSearch = function (params) {
+  params.count = 10;
+  var path = '/search/tweets.json' + this.buildQS(params);
+  var url = this.baseUrl + path;
+  return this.doRequest(url)
+    .then((result) => {
+      return result;
+    })
 }
 // POST
 
@@ -132,13 +148,15 @@ Twitter.prototype.postUnfollow = function (params) {
 
 Twitter.prototype.doRequest = function (url, error, success) {
   url = formatUrl(url);
-  this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
-    if(!err && res.statusCode == 200) {
-      success(bod);
-    } else {
-      console.error('do request error' + err);
-    }
-  })
+  return new Promise((resolve, reject) => {
+    this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
+      if(!err && res.statusCode == 200) {
+        resolve(JSON.parse(bod));
+      } else {
+        console.error('do request error' + err);
+      }
+    })
+  });
 }
 
 Twitter.prototype.doRequests = function (url) {
