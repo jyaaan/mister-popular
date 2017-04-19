@@ -1,3 +1,5 @@
+// CAUTION Manual unfollows will not be caught by app
+
 var express = require('express');
 var app = express();
 
@@ -25,9 +27,17 @@ function showScreenName(data) {
 }
 
 function spliceDupilcates(arr) {
-  return arr.filter( (item, index, array) => {
+  return arr.filter((item, index, array) => {
     return array.indexOf(item) == index;
   });
+}
+
+function getUniqueIdsInA(arrA, arrB) {
+  return arrA.filter((itemA) => {
+    return arrB.findIndex((itemB) => {
+      return itemB === itemA;
+    }) == -1;
+  })
 }
 
 app.get('/limits', (req, res) => {
@@ -160,6 +170,57 @@ app.get('/initialize', (req, res) => {
           res.send(result);
         })
     })
+})
+
+app.get('/changes', (req, res) => {
+  var clientId = twitter.clientId;
+  getAllUserIds(clientId)
+    .then((objIds) => {
+      database.getUserIds('users')
+        .then((result) => {
+          var newIds = getUniqueIdsInA(objIds.all, result);
+          console.log(result);
+          console.log('new ids!');
+          console.log(newIds);
+          console.log('end new');
+          if (newIds.length > 0) {
+            var objNewIds = pairKeyValue('id', newIds);
+            database.insertObjects('users', objNewIds)
+              .then((result) => {
+
+              });
+            return 'ok';
+          }
+        })
+      return objIds;
+    })
+    .then((objIds) => {
+      twitter.getFollowing({ user_id: clientId })
+        .then((data) => {
+          var newFollowing = getUniqueIdsInA(objIds.following, data);
+          if (newFollowing.length > 0) {
+            database.upsertRelationships(clientId, newFollowing, { following: true })
+              .then((result) => {
+
+              });
+          }
+        })
+      return objIds;
+    })
+    .then((objIds) => {
+      twitter.getFollowedBy({ user_id: clientId })
+        .then((data) => {
+          var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data)
+          if (newFollowedBy.length > 0) {
+            database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
+              .then((result) => {
+
+              });
+          }
+        })
+        return 'ok';
+    })
+    res.send('done');
 })
 
 function generateRelationships(objIds, clientId) {

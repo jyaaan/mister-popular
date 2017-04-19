@@ -15,7 +15,16 @@ Database.prototype.clearTable = function (tableName) {
 }
 
 Database.prototype.getUserIds = function (tableName) {
-  return knex(tableName).select('id');
+  return new Promise((resolve, reject) => {
+    knex(tableName).select('id')
+      .then((result) => {
+        var ids = result.map((obj) => {
+          return Number(obj.id);
+        })
+        resolve(ids);
+      })
+  });
+
 }
 
 Database.prototype.getQueryUserIds = function (tableName, params) {
@@ -57,8 +66,18 @@ Database.prototype.logAction = function (clientId, userId, type) {
     timestamp: new Date(Date.now()).toISOString() });
 }
 
-Database.prototype.createRelationship = function (clientId, userId) {
+Database.prototype.createRelationship = function (clientId, userId, params) {
+  params.client_id = clientId;
+  params.user_id = userId;
+  return knex('relationships')
+    .insert(params)
+}
 
+Database.prototype.updateRelationship = function (clientId, userId, params) {
+  return knex('relationships')
+    .where('client_id', clientId)
+    .andWhere('user_id', userId)
+    .update(params)
 }
 
 Database.prototype.updateUnfollow = function (clientId, userId) {
@@ -90,6 +109,28 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
       console.log('transaction failed');
       return 'transaction failed';
     });
+}
+
+Database.prototype.upsertRelationships = function (clientId, userIds, params) {
+  return new Promise((resolve, reject) => {
+    userIds.forEach((userId) => {
+      knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
+      .then((result) => {
+        if (result > 0) {
+          this.updateRelationship(clientId, userId, params)
+          .then((result) => {
+
+          })
+        } else {
+          this.createRelationship(clientId, userId, params)
+          .then((result) => {
+
+          })
+        }
+      })
+    })
+    resolve('ok');
+  })
 }
 
 exports.Database = Database;
