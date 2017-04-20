@@ -14,14 +14,6 @@ var tempFollowingDate = new Date(2017, 3, 15, 9, 0, 0);
 // var Schedule = require('./schedule').Schedule;
 // var schedule = new Schedule();
 
-function error(err, res, bod) {
-  console.log('error: ' + err);
-}
-
-function success(data, limits) {
-  console.log(data);
-}
-
 function showScreenName(data) {
   console.log(data.screen_name);
 }
@@ -41,7 +33,7 @@ function getUniqueIdsInA(arrA, arrB) {
 }
 
 app.get('/limits', (req, res) => {
-  twitter.getRateLimits(error, success);
+  twitter.getRateLimits();
 })
 
 app.get('/following', (req, res) => {
@@ -52,7 +44,7 @@ app.get('/following', (req, res) => {
 })
 
 app.get('/settings', (req, res) => {
-  twitter.getAccountSettings({}, error, success);
+  twitter.getAccountSettings({});
 })
 
 app.get('/follow/:userId', (req, res) => {
@@ -244,11 +236,18 @@ app.get('/changes', (req, res) => {
       twitter.getFollowing({ user_id: clientId })
         .then((data) => {
           var newFollowing = getUniqueIdsInA(objIds.following, data);
+          var newUnfollowing = getUniqueIdsInA(data, objIds.following);
           if (newFollowing.length > 0) {
             database.upsertRelationships(clientId, newFollowing, { following: true })
               .then((result) => {
 
               });
+          }
+          if (newUnfollowing.length > 0) {
+            database.upsertRelationships(clientId, newUnfollowing, { following: false })
+              .then((result) => {
+
+              })
           }
         })
       return objIds;
@@ -256,9 +255,16 @@ app.get('/changes', (req, res) => {
     .then((objIds) => {
       twitter.getFollowedBy({ user_id: clientId })
         .then((data) => {
-          var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data)
+          var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
+          var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
           if (newFollowedBy.length > 0) {
             database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
+              .then((result) => {
+
+              });
+          }
+          if (newUnfollowedBy.length > 0) {
+            database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
               .then((result) => {
 
               });

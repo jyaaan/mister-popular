@@ -135,10 +135,13 @@ Twitter.prototype.postFollow = function (params) {
   var path = '/friendships/create.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  return this.doPost(url, {})
-    .then((result) => {
-      return result;
-    });
+  // return this.doPost(url, {})
+  //   .then((result) => {
+  //     return result;
+  //   });
+  return new Promise((resolve, reject) => {
+    resolve('followed, yay!');
+  })
 }
 
 Twitter.prototype.postUnfollow = function (params) {

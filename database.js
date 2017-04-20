@@ -24,7 +24,6 @@ Database.prototype.getUserIds = function (tableName) {
         resolve(ids);
       })
   });
-
 }
 
 Database.prototype.getFollowedBy = function (clientId) {
@@ -81,20 +80,33 @@ Database.prototype.logAction = function (clientId, userId, type) {
     timestamp: new Date(Date.now()).toISOString() });
 }
 
+// rewrite to log on call
 Database.prototype.createRelationship = function (clientId, userId, params) {
   params.client_id = clientId;
   params.user_id = userId;
+  if (typeof params.following != undefined) {
+    if (params.following) {
+      params.last_follow_ts = new Date(Date.now()).toISOString();
+    }
+  }
   return knex('relationships')
     .insert(params)
 }
 
+// rewrite to log on call
 Database.prototype.updateRelationship = function (clientId, userId, params) {
+  if (typeof params.following != undefined) {
+    if (params.following) {
+      params.last_follow_ts = new Date(Date.now()).toISOString();
+    }
+  }
   return knex('relationships')
     .where('client_id', clientId)
     .andWhere('user_id', userId)
     .update(params)
 }
 
+// rewrite to log on call
 Database.prototype.updateUnfollow = function (clientId, userId) {
   return knex('relationships')
     .where('client_id', clientId)
@@ -126,7 +138,7 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
     });
 }
 
-Database.prototype.upsertRelationships = function (clientId, userIds, params, type) {
+Database.prototype.upsertRelationships = function (clientId, userIds, params) {
   return new Promise((resolve, reject) => {
     userIds.forEach((userId) => {
       knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
@@ -134,7 +146,6 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params, ty
         if (result > 0) {
           this.updateRelationship(clientId, userId, params)
           .then((result) => {
-
           })
         } else {
           this.createRelationship(clientId, userId, params)
@@ -142,9 +153,21 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params, ty
 
           })
         }
+        return 'ok';
+      })
+      .then((message) => {
+        if (typeof params.following != undefined) {
+          var type = params.following ? 'following' : 'unfollowing'
+        } else {
+          var type = params.followed_by ? 'followed by' : 'unfollowed by';
+        }
+        this.logAction(clientId, userId, type)
+        .then((result) => {
+          console.log('logged');
+          resolve('ok');
+        })
       })
     })
-    resolve('ok');
   })
 }
 
