@@ -281,28 +281,29 @@ app.get('/changes', (req, res) => {
 
               })
           }
+          return 'hi';
+        })
+        .then((result) => {
+          database.getFollowedBy(clientId)
+          .then((data) => {
+            var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
+            var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
+            if (newFollowedBy.length > 0) {
+              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
+              .then((result) => {
+
+              });
+            }
+            if (newUnfollowedBy.length > 0) {
+              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
+              .then((result) => {
+
+              });
+            }
+          })
+          return 'ok';
         })
       return objIds;
-    })
-    .then((objIds) => {
-      database.getFollowedBy(clientId)
-        .then((data) => {
-          var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
-          var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
-          if (newFollowedBy.length > 0) {
-            database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
-              .then((result) => {
-
-              });
-          }
-          if (newUnfollowedBy.length > 0) {
-            database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
-              .then((result) => {
-
-              });
-          }
-        })
-        return 'ok';
     })
     res.send('done');
 })
