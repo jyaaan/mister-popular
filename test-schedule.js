@@ -22,29 +22,30 @@ testSchedule.assignBucketQuantities();
 testSchedule.populateBuckets();
 testSchedule.generateActionPlan();
 testSchedule.schedulePos = testSchedule.getNextActionPos();
-testSchedule.scheduleNextAction(() => {
-  unfollowNext();
-  console.log((testSchedule.schedulePos + 1) + ' out of ' + testSchedule.actionSchedule.length);
-
-});
-
-// var testFollowSchedule = new Schedule('Follow', 'john', {
-//   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
-//   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-//   targetActions: 1000, resolution: 50
-// });
-// testFollowSchedule.assignBucketQuantities();
-// testFollowSchedule.populateBuckets();
-// testFollowSchedule.generateActionPlan();
-// testFollowSchedule.schedulePos = testFollowSchedule.getNextActionPos();
-// testFollowSchedule.scheduleNextAction(() => {
-//   // check follow list quantity. fill if under 50
-//   // take next id, splice out from array
-//   // follow that id, create user if doesn't exist, create relationship if doesn't exist
-//   // log the action
-//   console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
+// testSchedule.scheduleNextAction(() => {
+//   unfollowNext();
+//   console.log((testSchedule.schedulePos + 1) + ' out of ' + testSchedule.actionSchedule.length);
 //
 // });
+
+var testFollowSchedule = new Schedule('Follow', 'john', {
+  startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
+  stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
+  targetActions: 1400, resolution: 50
+});
+testFollowSchedule.assignBucketQuantities();
+testFollowSchedule.populateBuckets();
+testFollowSchedule.generateActionPlan();
+testFollowSchedule.schedulePos = testFollowSchedule.getNextActionPos();
+testFollowSchedule.scheduleNextAction(() => {
+  checkPhil(twitter)
+    .then((result) => {
+      followNext(twitter)
+        .then((result) => {
+          return console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
+        })
+    })
+});
 // THIS FUNCTION TO BE ADDED INTO MAIN WHEN READY
 function unfollowNext() {
   database.getNextUnfollow(twitter.clientId)
@@ -82,19 +83,85 @@ function unfollowNext() {
     })
 }
 
-// function followNext(twit) {
-//   var nextFollowId = getNextFollow(twit);
-//   twitter.postFollow({ user_id: nextFollowId })
-//     .then((result) => {
-//       // upsert user
-//     })
-//     .then((result) => {
-//       // upsert relationship // this should log
-//     })
-// }
-//
-// function getNextFollow(twit) {
-//   var id = twit.followList[0];
-//   twit.followList.splice(0, 1);
-//   return id;
-// }
+function followNext(twit) {
+  var nextFollowId = [];
+  nextFollowId.push(getNextFollow(twit));
+  return new Promise((resolve, reject) => {
+    if (nextFollowId[0] != -1) {
+      return twitter.postFollow({ user_id: nextFollowId[0] })
+      .then((result) => {
+        return database.upsertUser(nextFollowId[0])
+      })
+      .then((result) => {
+        return database.upsertRelationships(twit.clientId, nextFollowId, { following: true })
+        resolve('added');
+      })
+    } else {
+      resolve('nothing in list');
+    }
+
+  })
+}
+
+function getNextFollow(twit) {
+  if (typeof twit.followList[0] == undefined) return -1;
+  var id = twit.followList[0];
+  twit.followList.splice(0, 1);
+  return id;
+}
+
+function checkPhil(twit) {
+  if (twitter.queryTerms.length == 0) return;
+  return new  Promise((resolve, reject) => {
+    if (twit.followList.length < 50) {
+      buildFollowList(twit)
+      .then((result) => {
+        console.log('rebuilding list' + result);
+        resolve('phil');
+      })
+    } else {
+      resolve('done');
+    }
+  })
+}
+
+function buildFollowList(objTwitter) {
+  return new Promise((resolve, reject) => {
+    function cb(twit) {
+      console.log('term to query: ' + twit.queryTerms[objTwitter.queryPos]);
+      twit.getSearch({ q: twit.queryTerms[twit.queryPos] })
+      .then((result) => {
+        var searchIds = [];
+        result.statuses.forEach((status) => {
+          if(!(status.user.following || status.user.follow_request_sent)) {
+            searchIds.push(status.user.id);
+          }
+        })
+        return searchIds;
+      })
+      .then((searchIds) => {
+        database.getFollowedBy(twit.clientId)
+          .then((result) => {
+            var trimmedSearchIds = getUniqueIdsInA(searchIds, result);
+            twit.followList = twit.followList.concat(trimmedSearchIds);
+            console.log('follow list length: ' + twit.followList.length);
+            if(twit.followList.length > 199) {
+              resolve('gee');
+            } else {
+              twit.incrementQuery();
+              cb(twit);
+            }
+          })
+      })
+    }
+    cb(objTwitter);
+  })
+}
+
+function getUniqueIdsInA(arrA, arrB) {
+  return arrA.filter((itemA) => {
+    return arrB.findIndex((itemB) => {
+      return itemB === itemA;
+    }) == -1;
+  })
+}

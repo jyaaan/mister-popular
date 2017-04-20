@@ -121,7 +121,7 @@ Database.prototype.updateRelationship = function (clientId, userId, params) {
     .update(params)
 }
 
-// rewrite to log on call
+// rewrite to log on call OBSOLETE?
 Database.prototype.updateUnfollow = function (clientId, userId) {
   return knex('relationships')
     .where('client_id', clientId)
@@ -151,6 +151,23 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
       console.log('transaction failed');
       return 'transaction failed';
     });
+}
+
+Database.prototype.upsertUser = function (userId) {
+  return new Promise((resolve, reject) => {
+    knex('users')
+      .count('*')
+      .andWhere('id', userId)
+      .then((result) => {
+        if (result > 0) {
+          knex('users')
+            .insert({ id: userId })
+        }
+      })
+      .then((result) => {
+        resolve(result);
+      })
+  })
 }
 
 Database.prototype.upsertRelationships = function (clientId, userIds, params) {

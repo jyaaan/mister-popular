@@ -127,10 +127,12 @@ Twitter.prototype.getSearch = function (params) {
   params.count = 100;
   var path = '/search/tweets.json' + this.buildQS(params);
   var url = this.baseUrl + path;
-  return this.doRequest(url)
-    // .then((result) => {
-    //   return result;
-    // })
+  return new Promise((resolve, reject) => {
+    this.doRequest(url)
+      .then((result) => {
+        resolve(result);
+      })
+  })
 }
 // POST
 
