@@ -62,7 +62,8 @@ Database.prototype.getQueryUserIds = function (tableName, params) {
 
 Database.prototype.getNextUnfollow = function (clientId) {
   return knex('relationships')
-    .where('client_id', clientId)
+    .whereNot('user_id', 'like', '%00')
+    .andWhere('client_id', clientId)
     .andWhere('following', true)
     .andWhere('followed_by', false)
     .andWhere('locked', false)
