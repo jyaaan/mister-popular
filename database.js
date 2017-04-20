@@ -34,7 +34,6 @@ Database.prototype.getFollowedBy = function (clientId) {
       .where('client_id', clientId)
       .andWhere('followed_by', true)
       .then((result) => {
-        console.log(result);
         var ids = result.map((obj) => {
           return Number(obj.user_id);
         })

@@ -138,6 +138,48 @@ app.get('/nextUnfollow', (req, res) => {
     })
 })
 
+app.get('/buildFollowList', (req, res) => {
+  if (twitter.queryTerms.length == 0) return;
+  buildFollowList(twitter)
+    .then((result) => {
+      console.log(result + 'am i here?');
+      console.log(twitter.followList.length + ' yesss');
+    });
+})
+
+function buildFollowList(objTwitter) {
+  console.log('term to query: ' + objTwitter.queryTerms[objTwitter.queryPos]);
+  return new Promise((resolve, reject) => {
+    function cb(twit) {
+      twit.getSearch({ q: twit.queryTerms[objTwitter.queryPos] })
+      .then((result) => {
+        var searchIds = [];
+        result.statuses.forEach((status) => {
+          if(!(status.user.following || status.user.follow_request_sent)) {
+            searchIds.push(status.user.id);
+          }
+        })
+        return searchIds;
+      })
+      .then((searchIds) => {
+        database.getFollowedBy(twit.clientId)
+        .then((result) => {
+          var trimmedSearchIds = getUniqueIdsInA(searchIds, result);
+          twit.followList = twit.followList.concat(trimmedSearchIds);
+          console.log('follow list length: ' + twit.followList.length);
+          if(twit.followList.length > 199) {
+            resolve('gee');
+          } else {
+            twit.incrementQuery();
+            cb(twit);
+          }
+        })
+      })
+    }
+    cb(objTwitter);
+  })
+}
+
 app.get('/search/:query', (req, res) => {
   twitter.getSearch({ q: req.params.query })
     .then((result) => {

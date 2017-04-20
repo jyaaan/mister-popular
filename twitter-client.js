@@ -26,9 +26,20 @@ function Twitter() {
       this.callBackUrl,
       'HMAC-SHA1'
     );
+    this.queryTerms = [
+      'burgers',
+      'fries',
+      'bob'
+    ];
+    this.queryPos = 0;
+    this.followList = [];
   } catch (err) {
     console.log('missing config file');
   }
+}
+
+Twitter.prototype.incrementQuery = function () {
+  this.queryPos = (this.queryPos + 1 < this.queryTerms.length) ? this.queryPos + 1 : 0;
 }
 
 // AUTHENTICATION FUNCTIONS
@@ -109,13 +120,13 @@ Twitter.prototype.getRateLimits = function () {
 }
 
 Twitter.prototype.getSearch = function (params) {
-  params.count = 10;
+  params.count = 100;
   var path = '/search/tweets.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   return this.doRequest(url)
-    .then((result) => {
-      return result;
-    })
+    // .then((result) => {
+    //   return result;
+    // })
 }
 // POST
 
@@ -146,7 +157,7 @@ Twitter.prototype.postUnfollow = function (params) {
 
 // DO FUNCTIONS
 
-Twitter.prototype.doRequest = function (url, error, success) {
+Twitter.prototype.doRequest = function (url) {
   url = formatUrl(url);
   return new Promise((resolve, reject) => {
     this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
