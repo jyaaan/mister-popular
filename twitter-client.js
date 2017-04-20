@@ -81,10 +81,12 @@ Twitter.prototype.getFollowing = function (params) {
   var path = '/friends/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  return this.doRequests(url)
+  return new Promise((resolve, reject) => {
+    this.doRequests(url)
     .then((data) => {
-      return data[0];
+      resolve(data[0]);
     })
+  })
 }
 
 Twitter.prototype.getFollowedBy = function (params) {
@@ -92,10 +94,12 @@ Twitter.prototype.getFollowedBy = function (params) {
   var path = '/followers/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  return this.doRequests(url)
+  return new Promise((resolve, reject) => {
+    this.doRequests(url)
     .then((data) => {
-      return data[0];
+      resolve(data[0]);
     })
+  })
 }
 
 Twitter.prototype.getAccountSettings = function (params) {

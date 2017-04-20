@@ -233,18 +233,20 @@ app.get('/changes', (req, res) => {
       return objIds;
     })
     .then((objIds) => {
-      twitter.getFollowing({ user_id: clientId })
+      database.getFollowing(clientId)
         .then((data) => {
           var newFollowing = getUniqueIdsInA(objIds.following, data);
           var newUnfollowing = getUniqueIdsInA(data, objIds.following);
-          if (newFollowing.length > 0) {
-            database.upsertRelationships(clientId, newFollowing, { following: true })
-              .then((result) => {
-
-              });
-          }
+          console.log('determining new following' + newFollowing.length);
+          console.log('determining new unfollowing' + newUnfollowing.length)
           if (newUnfollowing.length > 0) {
             database.upsertRelationships(clientId, newUnfollowing, { following: false })
+              .then((result) => {
+
+              })
+          }
+          if (newFollowing.length > 0) {
+            database.upsertRelationships(clientId, newFollowing, { following: true })
               .then((result) => {
 
               })
@@ -253,7 +255,7 @@ app.get('/changes', (req, res) => {
       return objIds;
     })
     .then((objIds) => {
-      twitter.getFollowedBy({ user_id: clientId })
+      database.getFollowedBy(clientId)
         .then((data) => {
           var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
           var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
@@ -301,14 +303,14 @@ function getAllUserIds(clientId) {
       console.log('following: ' + followingIds.length);
       return 'ok';
     })
-    .then(() => {
+    .then((result) => {
       twitter.getFollowedBy({ user_id: clientId })
       .then((data) => {
         followedByIds = data;
         console.log('followed by: ' + followedByIds.length);
         return 'ok';
       })
-      .then(() => {
+      .then((result) => {
         var allIds = followingIds.concat(followedByIds);
         console.log('all ids before splicing: ' + allIds.length);
         allIds = spliceDupilcates(allIds);

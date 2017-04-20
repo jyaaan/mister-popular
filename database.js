@@ -41,6 +41,21 @@ Database.prototype.getFollowedBy = function (clientId) {
   })
 }
 
+Database.prototype.getFollowing = function (clientId) {
+  return new Promise((resolve, reject) => {
+    knex('relationships')
+      .select('user_id')
+      .where('client_id', clientId)
+      .andWhere('following', true)
+      .then((result) => {
+        var ids = result.map((obj) => {
+          return Number(obj.user_id);
+        })
+        resolve(ids);
+      })
+  })
+}
+
 Database.prototype.getQueryUserIds = function (tableName, params) {
 
 }

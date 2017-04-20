@@ -28,23 +28,23 @@ testSchedule.scheduleNextAction(() => {
 
 });
 
-var testFollowSchedule = new Schedule('Follow', 'john', {
-  startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
-  stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 1000, resolution: 50
-});
-testFollowSchedule.assignBucketQuantities();
-testFollowSchedule.populateBuckets();
-testFollowSchedule.generateActionPlan();
-testFollowSchedule.schedulePos = testFollowSchedule.getNextActionPos();
-testFollowSchedule.scheduleNextAction(() => {
-  // check follow list quantity. fill if under 50
-  // take next id, splice out from array
-  // follow that id, create user if doesn't exist, create relationship if doesn't exist
-  // log the action
-  console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
-
-});
+// var testFollowSchedule = new Schedule('Follow', 'john', {
+//   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
+//   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
+//   targetActions: 1000, resolution: 50
+// });
+// testFollowSchedule.assignBucketQuantities();
+// testFollowSchedule.populateBuckets();
+// testFollowSchedule.generateActionPlan();
+// testFollowSchedule.schedulePos = testFollowSchedule.getNextActionPos();
+// testFollowSchedule.scheduleNextAction(() => {
+//   // check follow list quantity. fill if under 50
+//   // take next id, splice out from array
+//   // follow that id, create user if doesn't exist, create relationship if doesn't exist
+//   // log the action
+//   console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
+//
+// });
 // THIS FUNCTION TO BE ADDED INTO MAIN WHEN READY
 function unfollowNext() {
   database.getNextUnfollow(twitter.clientId)
@@ -82,19 +82,19 @@ function unfollowNext() {
     })
 }
 
-function followNext(twit) {
-  var nextFollowId = getNextFollow(twit);
-  twitter.postFollow({ user_id: nextFollowId })
-    .then((result) => {
-      // upsert user
-    })
-    .then((result) => {
-      // upsert relationship // this should log
-    })
-}
-
-function getNextFollow(twit) {
-  var id = twit.followList[0];
-  twit.followList.splice(0, 1);
-  return id;
-}
+// function followNext(twit) {
+//   var nextFollowId = getNextFollow(twit);
+//   twitter.postFollow({ user_id: nextFollowId })
+//     .then((result) => {
+//       // upsert user
+//     })
+//     .then((result) => {
+//       // upsert relationship // this should log
+//     })
+// }
+//
+// function getNextFollow(twit) {
+//   var id = twit.followList[0];
+//   twit.followList.splice(0, 1);
+//   return id;
+// }
