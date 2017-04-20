@@ -132,13 +132,17 @@ function checkPhil(twit) {
 function buildFollowList(objTwitter) {
   return new Promise((resolve, reject) => {
     function cb(twit) {
-      console.log('term to query: ' + twit.queryTerms[objTwitter.queryPos]);
+      console.log('term to query: ' + twit.queryTerms[twit.queryPos]);
       twit.getSearch({ q: twit.queryTerms[twit.queryPos] })
       .then((result) => {
         var searchIds = [];
         result.statuses.forEach((status) => {
           if(!(status.user.following || status.user.follow_request_sent)) {
-            searchIds.push(status.user.id);
+            var thisId = status.user.id.toString();
+            if (thisId.substr(thisId.length - 2) != '00') {
+              // console.log('pass');
+              searchIds.push(status.user.id);
+            }
           }
         })
         return searchIds;
