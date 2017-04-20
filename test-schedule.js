@@ -24,7 +24,7 @@ testSchedule.generateActionPlan();
 testSchedule.schedulePos = testSchedule.getNextActionPos();
 testSchedule.scheduleNextAction(() => {
   unfollowNext();
-  console.log('unfollowingn stats:');
+  console.log('unfollowing stats:');
   console.log((testSchedule.schedulePos + 1) + ' out of ' + testSchedule.actionSchedule.length);
 
 });
@@ -43,45 +43,47 @@ testFollowSchedule.scheduleNextAction(() => {
     .then((result) => {
       followNext(twitter)
         .then((result) => {
-          console.log('following stats:');
-          return console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
         })
     })
+  console.log('following stats:');
+  console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
 });
 // THIS FUNCTION TO BE ADDED INTO MAIN WHEN READY
 function unfollowNext() {
   database.getNextUnfollow(twitter.clientId)
     .then((result) => {
-      var userId = result[0].user_id;
-      database.lockRelationship(twitter.clientId, userId)
+      if(typeof result[0].user_id != undefined){
+        var userId = result[0].user_id;
+        database.lockRelationship(twitter.clientId, userId)
         .then((result) => {
           console.log('locked');
+          return userId;
         })
-      return userId;
-    })
-    .then((userId) => {
-      twitter.postUnfollow({ user_id: userId })
-        .then((result) => {
-          database.logAction(twitter.clientId, userId, 'unfollow')
+        .then((userId) => {
+          twitter.postUnfollow({ user_id: userId })
+          .then((result) => {
+            database.logAction(twitter.clientId, userId, 'unfollow')
             .then((result) => {
               console.log(result);
               console.log('successfully unfollowed: ' + userId);
             })
+          })
+          return userId;
         })
-      return userId;
-    })
-    .then((userId) => {
-      database.updateUnfollow(twitter.clientId, userId)
-        .then((result) => {
-          console.log('unfollowed');
-          database.unlockRelationship(twitter.clientId, userId)
+        .then((userId) => {
+          database.updateUnfollow(twitter.clientId, userId)
+          .then((result) => {
+            console.log('unfollowed');
+            database.unlockRelationship(twitter.clientId, userId)
             .then((result) => {
               console.log('unlocked');
             })
+          })
+          return 'complete';
         })
-      return 'complete';
-    })
-    .then((message) => {
+      } else {
+        return 'no one to unfollow';
+      }
     })
 }
 
