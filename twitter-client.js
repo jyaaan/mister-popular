@@ -27,9 +27,9 @@ function Twitter() {
       'HMAC-SHA1'
     );
     this.queryTerms = [
-      'burgers',
-      'fries',
-      'bob'
+      'trump+syria',
+      'trump+russia',
+      'trump+korea'
     ];
     this.queryPos = 0;
     this.followList = [];
@@ -141,13 +141,13 @@ Twitter.prototype.postFollow = function (params) {
   var path = '/friendships/create.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  // return this.doPost(url, {})
-  //   .then((result) => {
-  //     return result;
-  //   });
-  return new Promise((resolve, reject) => {
-    resolve('followed, yay!');
-  })
+  return this.doPost(url, {})
+    .then((result) => {
+      return result;
+    });
+  // return new Promise((resolve, reject) => {
+  //   resolve('followed, yay!');
+  // })
 }
 
 Twitter.prototype.postUnfollow = function (params) {
@@ -155,13 +155,13 @@ Twitter.prototype.postUnfollow = function (params) {
   var path = '/friendships/destroy.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  // return this.doPost(url, {})
-  //   .then((result) => {
-  //     return result;
-  //   });
-  return new Promise((resolve, reject) => {
-    resolve('yay');
-  })
+  return this.doPost(url, {})
+    .then((result) => {
+      return result;
+    });
+  // return new Promise((resolve, reject) => {
+  //   resolve('yay');
+  // })
 }
 
 // DO FUNCTIONS

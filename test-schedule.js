@@ -15,7 +15,7 @@ var dayToday = dateToday.getDate();
 var testSchedule = new Schedule('unfollow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 1000, resolution: 50
+  targetActions: 600, resolution: 50
 });
 
 testSchedule.assignBucketQuantities();
@@ -32,7 +32,7 @@ testSchedule.scheduleNextAction(() => {
 var testFollowSchedule = new Schedule('Follow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 1400, resolution: 50
+  targetActions: 500, resolution: 50
 });
 testFollowSchedule.assignBucketQuantities();
 testFollowSchedule.populateBuckets();
