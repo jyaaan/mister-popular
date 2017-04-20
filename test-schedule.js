@@ -22,11 +22,12 @@ testSchedule.assignBucketQuantities();
 testSchedule.populateBuckets();
 testSchedule.generateActionPlan();
 testSchedule.schedulePos = testSchedule.getNextActionPos();
-// testSchedule.scheduleNextAction(() => {
-//   unfollowNext();
-//   console.log((testSchedule.schedulePos + 1) + ' out of ' + testSchedule.actionSchedule.length);
-//
-// });
+testSchedule.scheduleNextAction(() => {
+  unfollowNext();
+  console.log('unfollowingn stats:');
+  console.log((testSchedule.schedulePos + 1) + ' out of ' + testSchedule.actionSchedule.length);
+
+});
 
 var testFollowSchedule = new Schedule('Follow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
@@ -42,6 +43,7 @@ testFollowSchedule.scheduleNextAction(() => {
     .then((result) => {
       followNext(twitter)
         .then((result) => {
+          console.log('following stats:');
           return console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
         })
     })

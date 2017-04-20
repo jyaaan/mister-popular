@@ -91,6 +91,36 @@ app.get('/clear/:tableName', (req, res) => {
     });
 })
 
+app.get('/hardreset', (req, res) => {
+  database.clearTable('users')
+    .then((result) => {
+      database.clearTable('relationships')
+      .then((result) => {
+        database.clearTable('log')
+        .then((result) => {
+          var allUserIds = [];
+          getAllUserIds(twitter.clientId)
+          .then((objIds) => {
+            allUserIds = pairKeyValue('id', objIds.all);
+            database.insertObjects('users', allUserIds)
+            .then((result) => {
+
+            });
+            return objIds;
+          })
+          .then((objIds) => {
+            var batchObj = generateRelationships(objIds, twitter.clientId);
+            console.log(batchObj);
+            database.insertObjects('relationships', batchObj)
+            .then((result) => {
+              res.send(result);
+            })
+          })
+        })
+      })
+    })
+})
+
 app.get('/getFollowedBy', (req, res) => {
   twitter.getFollowedBy({ user_id: twitter.userId })
     .then((data) => {
