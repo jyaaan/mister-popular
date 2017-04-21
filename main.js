@@ -244,6 +244,14 @@ app.get('/initialize', (req, res) => {
     })
 })
 
+app.get('/count', (req, res) => {
+  database.counter()
+    .then((count) => {
+      console.log(count + 1);
+      res.send('ok');
+    })
+})
+
 app.get('/changes', (req, res) => {
   var clientId = twitter.clientId;
   getAllUserIds(clientId)
@@ -288,6 +296,8 @@ app.get('/changes', (req, res) => {
           .then((data) => {
             var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
             var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
+            console.log('determining new followed by' + newFollowedBy.length);
+            console.log('determining new unfollowed by' + newUnfollowedBy.length);
             if (newFollowedBy.length > 0) {
               database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
               .then((result) => {

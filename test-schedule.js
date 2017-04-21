@@ -18,6 +18,77 @@ var testSchedule = new Schedule('unfollow', 'john', {
   targetActions: 600, resolution: 50
 });
 
+var recurFifteen = new Schedule('recurring', 'john', {
+  startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
+  stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
+  targetActions: 600, resolution: 50
+});
+
+recurFifteen.scheduleRecurring(15, () => {
+  var clientId = twitter.clientId;
+  console.log('recurring 15 running');
+  getAllUserIds(clientId)
+    .then((objIds) => {
+      database.getUserIds('users')
+        .then((result) => {
+          var newIds = getUniqueIdsInA(objIds.all, result);
+          if (newIds.length > 0) {
+            var objNewIds = pairKeyValue('id', newIds);
+            database.insertObjects('users', objNewIds)
+              .then((result) => {
+
+              });
+            return 'ok';
+          }
+        })
+      return objIds;
+    })
+    .then((objIds) => {
+      database.getFollowing(clientId)
+        .then((data) => {
+          var newFollowing = getUniqueIdsInA(objIds.following, data);
+          var newUnfollowing = getUniqueIdsInA(data, objIds.following);
+          console.log('determining new following' + newFollowing.length);
+          console.log('determining new unfollowing' + newUnfollowing.length)
+          if (newUnfollowing.length > 0) {
+            database.upsertRelationships(clientId, newUnfollowing, { following: false })
+              .then((result) => {
+
+              })
+          }
+          if (newFollowing.length > 0) {
+            database.upsertRelationships(clientId, newFollowing, { following: true })
+              .then((result) => {
+
+              })
+          }
+        })
+        .then((result) => {
+          database.getFollowedBy(clientId)
+          .then((data) => {
+            var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
+            var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
+            console.log('determining new followed by' + newFollowedBy.length);
+            console.log('determining new unfollowed by' + newUnfollowedBy.length);
+            if (newFollowedBy.length > 0) {
+              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
+              .then((result) => {
+
+              });
+            }
+            if (newUnfollowedBy.length > 0) {
+              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
+              .then((result) => {
+
+              });
+            }
+          })
+          return 'ok';
+        })
+      return objIds;
+    })
+})
+
 testSchedule.assignBucketQuantities();
 testSchedule.populateBuckets();
 testSchedule.generateActionPlan();
@@ -172,4 +243,67 @@ function getUniqueIdsInA(arrA, arrB) {
       return itemB === itemA;
     }) == -1;
   })
+}
+
+function getAllUserIds(clientId) {
+  var followingIds = [];
+  var followedByIds = [];
+  return new Promise((resolve, reject) => {
+    twitter.getFollowing({ user_id: clientId })
+    .then((data) => {
+      followingIds = data;
+      console.log('following: ' + followingIds.length);
+      return 'ok';
+    })
+    .then((result) => {
+      twitter.getFollowedBy({ user_id: clientId })
+      .then((data) => {
+        followedByIds = data;
+        console.log('followed by: ' + followedByIds.length);
+        return 'ok';
+      })
+      .then((result) => {
+        var allIds = followingIds.concat(followedByIds);
+        console.log('all ids before splicing: ' + allIds.length);
+        allIds = spliceDupilcates(allIds);
+        console.log('all ids after splicing: ' + allIds.length);
+        var objIds = {
+          following: followingIds,
+          followedBy: followedByIds,
+          all: allIds
+        };
+        resolve(objIds);
+      })
+    });
+  });
+}
+
+function pairKeyValue(key, values) {
+  return values.map((value) => {
+    var obj = {};
+    obj[key] = value;
+    return obj;
+  });
+}
+
+function generateRelationships(objIds, clientId) {
+  var objRelationships = [];
+  objIds.all.forEach((user) => {
+    var tempRelationships = {};
+    tempRelationships.client_id = clientId;
+    tempRelationships.user_id = user;
+    tempRelationships.locked = false;
+    if (objIds.following.indexOf(user) > -1) tempRelationships.last_follow_ts = tempFollowingDate.toISOString();
+    tempRelationships.following = (objIds.following.indexOf(user) > -1);
+    tempRelationships.followed_by = (objIds.followedBy.indexOf(user) > -1);
+    tempRelationships.unfollowed = false;
+    objRelationships.push(tempRelationships);
+  })
+  return objRelationships;
+}
+
+function spliceDupilcates(arr) {
+  return arr.filter((item, index, array) => {
+    return array.indexOf(item) == index;
+  });
 }

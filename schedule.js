@@ -138,6 +138,25 @@ Schedule.prototype.scheduleNextAction = function (action) {
   }
 }
 
+Schedule.prototype.scheduleRecurring = function (interval, action) {
+  var nextActionDate = new Date(getNextRecurring(interval));
+  console.log('scheduling next recurring');
+  console.log(nextActionDate);
+  function cb() {
+    action();
+    this.scheduleRecurring(interval, action);
+  }
+  scheduler.scheduleJob(nextActionDate, cb.bind(this));
+}
 
-
+function getNextRecurring(interval) {
+  // get time now.
+  // push to previous 15. so if it's :07, go back to :00, if it's :19, go back to 15 etc
+  var timeNow = new Date(Date.now());
+  var minuteNow = Math.floor(timeNow.getMinutes());
+  var prevMarker = Math.floor(minuteNow / interval) * interval;
+  var timeNext = new Date(timeNow.setMinutes(prevMarker + interval));
+  timeNext = timeNext.setSeconds(0);
+  return timeNext;
+}
 exports.Schedule = Schedule;

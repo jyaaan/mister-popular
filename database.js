@@ -160,7 +160,8 @@ Database.prototype.upsertUser = function (userId) {
       .count('*')
       .andWhere('id', userId)
       .then((result) => {
-        if (result > 0) {
+        var count = Number(result[0].count);
+        if (count > 0) {
           knex('users')
             .insert({ id: userId })
         }
@@ -171,12 +172,24 @@ Database.prototype.upsertUser = function (userId) {
   })
 }
 
+Database.prototype.counter = function () {
+  return new Promise((resolve, reject) => {
+    knex('relationships').count('*')
+      .then((result) => {
+        console.log(result[0]);
+        var count = Number(result[0].count);
+        resolve(count);
+      })
+  })
+}
+
 Database.prototype.upsertRelationships = function (clientId, userIds, params) {
   return new Promise((resolve, reject) => {
     userIds.forEach((userId) => {
       knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
       .then((result) => {
-        if (result > 0) {
+        var count = Number(result[0].count);
+        if (count > 0) {
           this.updateRelationship(clientId, userId, params)
           .then((result) => {
           })
@@ -189,7 +202,7 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params) {
         return 'ok';
       })
       .then((message) => {
-        if (typeof params.following != undefined) {
+        if (typeof params.following != 'undefined') {
           var type = params.following ? 'following' : 'unfollowing'
         } else {
           var type = params.followed_by ? 'followed by' : 'unfollowed by';
