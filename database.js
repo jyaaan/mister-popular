@@ -19,7 +19,7 @@ Database.prototype.getUserIds = function (tableName) {
     knex(tableName).select('id')
       .then((result) => {
         var ids = result.map((obj) => {
-          return Number(obj.id);
+          return obj.id;
         })
         resolve(ids);
       })
@@ -34,7 +34,7 @@ Database.prototype.getFollowedBy = function (clientId) {
       .andWhere('followed_by', true)
       .then((result) => {
         var ids = result.map((obj) => {
-          return Number(obj.user_id);
+          return obj.user_id;
         })
         resolve(ids);
       })
@@ -49,7 +49,7 @@ Database.prototype.getFollowing = function (clientId) {
       .andWhere('following', true)
       .then((result) => {
         var ids = result.map((obj) => {
-          return Number(obj.user_id);
+          return obj.user_id;
         })
         resolve(ids);
       })

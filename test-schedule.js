@@ -128,7 +128,7 @@ testFollowSchedule.scheduleNextAction(() => {
 function unfollowNext() {
   database.getNextUnfollow(twitter.clientId)
     .then((result) => {
-      if(typeof result[0].user_id != undefined){
+      if(typeof result[0].user_id != 'undefined'){
         var userId = result[0].user_id;
         database.lockRelationship(twitter.clientId, userId)
         .then((result) => {
@@ -184,7 +184,7 @@ function followNext(twit) {
 }
 
 function getNextFollow(twit) {
-  if (typeof twit.followList[0] == undefined) return -1;
+  if (typeof twit.followList[0] == 'undefined') return -1;
   var id = twit.followList[0];
   twit.followList.splice(0, 1);
   return id;
@@ -214,11 +214,10 @@ function buildFollowList(objTwitter) {
         var searchIds = [];
         result.statuses.forEach((status) => {
           if(!(status.user.following || status.user.follow_request_sent)) {
-            var thisId = status.user.id.toString();
-            if (thisId.substr(thisId.length - 2) != '00') {
+            // if (thisId.substr(thisId.length - 2) != '00') {
               // console.log('pass');
-              searchIds.push(status.user.id);
-            }
+              searchIds.push(status.user.id_str);
+            // }
           }
         })
         return searchIds;

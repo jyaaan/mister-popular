@@ -78,6 +78,7 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 Twitter.prototype.getFollowing = function (params) {
   console.log('getting all following');
+  params.stringify_ids = true;
   var path = '/friends/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
@@ -91,6 +92,7 @@ Twitter.prototype.getFollowing = function (params) {
 
 Twitter.prototype.getFollowedBy = function (params) {
   console.log('getting all followed by');
+  params.stringify_ids = true;
   var path = '/followers/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
