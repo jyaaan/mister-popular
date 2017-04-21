@@ -172,17 +172,6 @@ Database.prototype.upsertUser = function (userId) {
   })
 }
 
-Database.prototype.counter = function () {
-  return new Promise((resolve, reject) => {
-    knex('relationships').count('*')
-      .then((result) => {
-        console.log(result[0]);
-        var count = Number(result[0].count);
-        resolve(count);
-      })
-  })
-}
-
 Database.prototype.upsertRelationships = function (clientId, userIds, params) {
   return new Promise((resolve, reject) => {
     userIds.forEach((userId) => {

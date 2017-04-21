@@ -244,14 +244,6 @@ app.get('/initialize', (req, res) => {
     })
 })
 
-app.get('/count', (req, res) => {
-  database.counter()
-    .then((count) => {
-      console.log(count + 1);
-      res.send('ok');
-    })
-})
-
 app.get('/changes', (req, res) => {
   var clientId = twitter.clientId;
   getAllUserIds(clientId)

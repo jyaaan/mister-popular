@@ -1,3 +1,8 @@
+/*
+select count(*) from log where action_type = 'following';
+select count(*) from log where action_type = 'unfollow';
+select count(*) from log where action_type = 'followed by';
+*/
 var Schedule = require('./schedule').Schedule;
 
 var Twitter = require('./twitter-client').Twitter;
@@ -15,7 +20,7 @@ var dayToday = dateToday.getDate();
 var testSchedule = new Schedule('unfollow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 600, resolution: 50
+  targetActions: 800, resolution: 50
 });
 
 var recurFifteen = new Schedule('recurring', 'john', {
