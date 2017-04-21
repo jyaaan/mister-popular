@@ -124,7 +124,7 @@ Twitter.prototype.getRateLimits = function () {
 }
 
 Twitter.prototype.getSearch = function (params) {
-  params.count = 100;
+  params.count = 20;
   var path = '/search/tweets.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   return new Promise((resolve, reject) => {

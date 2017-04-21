@@ -193,7 +193,7 @@ function getNextFollow(twit) {
 function checkPhil(twit) {
   if (twitter.queryTerms.length == 0) return;
   return new  Promise((resolve, reject) => {
-    if (twit.followList.length < 50) {
+    if (twit.followList.length < 20) {
       buildFollowList(twit)
       .then((result) => {
         console.log('rebuilding list' + result);
@@ -229,7 +229,7 @@ function buildFollowList(objTwitter) {
             var trimmedSearchIds = getUniqueIdsInA(searchIds, result);
             twit.followList = twit.followList.concat(trimmedSearchIds);
             console.log('follow list length: ' + twit.followList.length);
-            if(twit.followList.length > 199) {
+            if(twit.followList.length > 59) {
               resolve('gee');
             } else {
               twit.incrementQuery();
