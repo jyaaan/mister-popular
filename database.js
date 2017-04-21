@@ -192,7 +192,7 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params) {
       })
       .then((message) => {
         if (typeof params.following != 'undefined') {
-          var type = params.following ? 'following' : 'unfollowing'
+          var type = params.following ? 'follow' : 'unfollow'
         } else {
           var type = params.followed_by ? 'followed by' : 'unfollowed by';
         }
