@@ -20,13 +20,13 @@ var dayToday = dateToday.getDate();
 var testSchedule = new Schedule('unfollow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 800, resolution: 50
+  targetActions: 400, resolution: 40
 });
 
 var recurFifteen = new Schedule('recurring', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 600, resolution: 50
+  targetActions: 300, resolution: 40
 });
 
 recurFifteen.scheduleRecurring(15, () => {
@@ -108,7 +108,7 @@ testSchedule.scheduleNextAction(() => {
 var testFollowSchedule = new Schedule('Follow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 500, resolution: 50
+  targetActions: 400, resolution: 40
 });
 testFollowSchedule.assignBucketQuantities();
 testFollowSchedule.populateBuckets();

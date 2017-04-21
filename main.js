@@ -9,7 +9,7 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
-var tempFollowingDate = new Date(2017, 3, 15, 9, 0, 0);
+var tempFollowingDate = new Date(2017, 3, 20, 9, 0, 0);
 
 // var Schedule = require('./schedule').Schedule;
 // var schedule = new Schedule();
