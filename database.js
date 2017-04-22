@@ -19,12 +19,41 @@ Database.prototype.getUserIds = function (tableName) {
     knex(tableName).select('id')
       .then((result) => {
         var ids = result.map((obj) => {
-          return Number(obj.id);
+          return obj.id;
         })
         resolve(ids);
       })
   });
+}
 
+Database.prototype.getFollowedBy = function (clientId) {
+  return new Promise((resolve, reject) => {
+    knex('relationships')
+      .select('user_id')
+      .where('client_id', clientId)
+      .andWhere('followed_by', true)
+      .then((result) => {
+        var ids = result.map((obj) => {
+          return obj.user_id;
+        })
+        resolve(ids);
+      })
+  })
+}
+
+Database.prototype.getFollowing = function (clientId) {
+  return new Promise((resolve, reject) => {
+    knex('relationships')
+      .select('user_id')
+      .where('client_id', clientId)
+      .andWhere('following', true)
+      .then((result) => {
+        var ids = result.map((obj) => {
+          return obj.user_id;
+        })
+        resolve(ids);
+      })
+  })
 }
 
 Database.prototype.getQueryUserIds = function (tableName, params) {
@@ -32,12 +61,15 @@ Database.prototype.getQueryUserIds = function (tableName, params) {
 }
 
 Database.prototype.getNextUnfollow = function (clientId) {
+  var dateNow = new Date(Date.now());
+  var datePrev = dateNow.setDate(dateNow.getDate() - 3);
   return knex('relationships')
-    .where('client_id', clientId)
+    .whereNot('user_id', 'like', '%00')
+    .andWhere('client_id', clientId)
     .andWhere('following', true)
     .andWhere('followed_by', false)
     .andWhere('locked', false)
-    .andWhere('last_follow_ts', '<', new Date(Date.now()).toISOString())
+    .andWhere('last_follow_ts', '<', datePrev.toISOString())
     .select('user_id')
     .limit(1)
 }
@@ -66,20 +98,33 @@ Database.prototype.logAction = function (clientId, userId, type) {
     timestamp: new Date(Date.now()).toISOString() });
 }
 
+// rewrite to log on call
 Database.prototype.createRelationship = function (clientId, userId, params) {
   params.client_id = clientId;
   params.user_id = userId;
+  if (typeof params.following != undefined) {
+    if (params.following) {
+      params.last_follow_ts = new Date(Date.now()).toISOString();
+    }
+  }
   return knex('relationships')
     .insert(params)
 }
 
+// rewrite to log on call
 Database.prototype.updateRelationship = function (clientId, userId, params) {
+  if (typeof params.following != undefined) {
+    if (params.following) {
+      params.last_follow_ts = new Date(Date.now()).toISOString();
+    }
+  }
   return knex('relationships')
     .where('client_id', clientId)
     .andWhere('user_id', userId)
     .update(params)
 }
 
+// rewrite to log on call OBSOLETE?
 Database.prototype.updateUnfollow = function (clientId, userId) {
   return knex('relationships')
     .where('client_id', clientId)
@@ -111,15 +156,33 @@ Database.prototype.insertObjects = function (tableName, arrObjData) {
     });
 }
 
-Database.prototype.upsertRelationships = function (clientId, userIds, params, type) {
+Database.prototype.upsertUser = function (userId) {
+  return new Promise((resolve, reject) => {
+    knex('users')
+      .count('*')
+      .andWhere('id', userId)
+      .then((result) => {
+        var count = Number(result[0].count);
+        if (count > 0) {
+          knex('users')
+            .insert({ id: userId })
+        }
+      })
+      .then((result) => {
+        resolve(result);
+      })
+  })
+}
+
+Database.prototype.upsertRelationships = function (clientId, userIds, params) {
   return new Promise((resolve, reject) => {
     userIds.forEach((userId) => {
       knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
       .then((result) => {
-        if (result > 0) {
+        var count = Number(result[0].count);
+        if (count > 0) {
           this.updateRelationship(clientId, userId, params)
           .then((result) => {
-
           })
         } else {
           this.createRelationship(clientId, userId, params)
@@ -127,9 +190,21 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params, ty
 
           })
         }
+        return 'ok';
+      })
+      .then((message) => {
+        if (typeof params.following != 'undefined') {
+          var type = params.following ? 'follow' : 'unfollow'
+        } else {
+          var type = params.followed_by ? 'followed by' : 'unfollowed by';
+        }
+        this.logAction(clientId, userId, type)
+        .then((result) => {
+          console.log('logged');
+          resolve('ok');
+        })
       })
     })
-    resolve('ok');
   })
 }
 

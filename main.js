@@ -9,18 +9,10 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
-var tempFollowingDate = new Date(2017, 3, 15, 9, 0, 0);
+var tempFollowingDate = new Date(2017, 3, 20, 9, 0, 0);
 
 // var Schedule = require('./schedule').Schedule;
 // var schedule = new Schedule();
-
-function error(err, res, bod) {
-  console.log('error: ' + err);
-}
-
-function success(data, limits) {
-  console.log(data);
-}
 
 function showScreenName(data) {
   console.log(data.screen_name);
@@ -41,7 +33,7 @@ function getUniqueIdsInA(arrA, arrB) {
 }
 
 app.get('/limits', (req, res) => {
-  twitter.getRateLimits(error, success);
+  twitter.getRateLimits();
 })
 
 app.get('/following', (req, res) => {
@@ -52,7 +44,7 @@ app.get('/following', (req, res) => {
 })
 
 app.get('/settings', (req, res) => {
-  twitter.getAccountSettings({}, error, success);
+  twitter.getAccountSettings({});
 })
 
 app.get('/follow/:userId', (req, res) => {
@@ -99,6 +91,36 @@ app.get('/clear/:tableName', (req, res) => {
     });
 })
 
+app.get('/hardreset', (req, res) => {
+  database.clearTable('users')
+    .then((result) => {
+      database.clearTable('relationships')
+      .then((result) => {
+        database.clearTable('log')
+        .then((result) => {
+          var allUserIds = [];
+          getAllUserIds(twitter.clientId)
+          .then((objIds) => {
+            allUserIds = pairKeyValue('id', objIds.all);
+            database.insertObjects('users', allUserIds)
+            .then((result) => {
+
+            });
+            return objIds;
+          })
+          .then((objIds) => {
+            var batchObj = generateRelationships(objIds, twitter.clientId);
+            console.log(batchObj);
+            database.insertObjects('relationships', batchObj)
+            .then((result) => {
+              res.send(result);
+            })
+          })
+        })
+      })
+    })
+})
+
 app.get('/getFollowedBy', (req, res) => {
   twitter.getFollowedBy({ user_id: twitter.userId })
     .then((data) => {
@@ -138,6 +160,48 @@ app.get('/nextUnfollow', (req, res) => {
     })
 })
 
+app.get('/buildFollowList', (req, res) => {
+  if (twitter.queryTerms.length == 0) return;
+  buildFollowList(twitter)
+    .then((result) => {
+      console.log(result + 'am i here?');
+      console.log(twitter.followList.length + ' yesss');
+    });
+})
+
+function buildFollowList(objTwitter) {
+  console.log('term to query: ' + objTwitter.queryTerms[objTwitter.queryPos]);
+  return new Promise((resolve, reject) => {
+    function cb(twit) {
+      twit.getSearch({ q: twit.queryTerms[objTwitter.queryPos] })
+      .then((result) => {
+        var searchIds = [];
+        result.statuses.forEach((status) => {
+          if(!(status.user.following || status.user.follow_request_sent)) {
+            searchIds.push(status.user.id);
+          }
+        })
+        return searchIds;
+      })
+      .then((searchIds) => {
+        database.getFollowedBy(twit.clientId)
+        .then((result) => {
+          var trimmedSearchIds = getUniqueIdsInA(searchIds, result);
+          twit.followList = twit.followList.concat(trimmedSearchIds);
+          console.log('follow list length: ' + twit.followList.length);
+          if(twit.followList.length > 199) {
+            resolve('gee');
+          } else {
+            twit.incrementQuery();
+            cb(twit);
+          }
+        })
+      })
+    }
+    cb(objTwitter);
+  })
+}
+
 app.get('/search/:query', (req, res) => {
   twitter.getSearch({ q: req.params.query })
     .then((result) => {
@@ -147,8 +211,16 @@ app.get('/search/:query', (req, res) => {
           searchIds.push(status.user.id);
         }
       })
-      res.send(searchIds);
-    });
+      return searchIds;
+    })
+    .then((searchIds) => {
+      database.getFollowedBy(twitter.clientId)
+        .then((result) => {
+          console.log(result);
+          var trimmedSearchIds = getUniqueIdsInA(searchIds, result)
+          res.send(trimmedSearchIds)
+        })
+    })
 })
 
 app.get('/initialize', (req, res) => {
@@ -191,30 +263,49 @@ app.get('/changes', (req, res) => {
       return objIds;
     })
     .then((objIds) => {
-      twitter.getFollowing({ user_id: clientId })
+      database.getFollowing(clientId)
         .then((data) => {
           var newFollowing = getUniqueIdsInA(objIds.following, data);
+          var newUnfollowing = getUniqueIdsInA(data, objIds.following);
+          console.log('determining new following' + newFollowing.length);
+          console.log('determining new unfollowing' + newUnfollowing.length)
+          if (newUnfollowing.length > 0) {
+            database.upsertRelationships(clientId, newUnfollowing, { following: false })
+              .then((result) => {
+
+              })
+          }
           if (newFollowing.length > 0) {
             database.upsertRelationships(clientId, newFollowing, { following: true })
               .then((result) => {
 
-              });
+              })
           }
+          return 'hi';
         })
-      return objIds;
-    })
-    .then((objIds) => {
-      twitter.getFollowedBy({ user_id: clientId })
-        .then((data) => {
-          var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data)
-          if (newFollowedBy.length > 0) {
-            database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
+        .then((result) => {
+          database.getFollowedBy(clientId)
+          .then((data) => {
+            var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
+            var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
+            console.log('determining new followed by' + newFollowedBy.length);
+            console.log('determining new unfollowed by' + newUnfollowedBy.length);
+            if (newFollowedBy.length > 0) {
+              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
               .then((result) => {
 
               });
-          }
+            }
+            if (newUnfollowedBy.length > 0) {
+              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
+              .then((result) => {
+
+              });
+            }
+          })
+          return 'ok';
         })
-        return 'ok';
+      return objIds;
     })
     res.send('done');
 })
@@ -245,14 +336,14 @@ function getAllUserIds(clientId) {
       console.log('following: ' + followingIds.length);
       return 'ok';
     })
-    .then(() => {
+    .then((result) => {
       twitter.getFollowedBy({ user_id: clientId })
       .then((data) => {
         followedByIds = data;
         console.log('followed by: ' + followedByIds.length);
         return 'ok';
       })
-      .then(() => {
+      .then((result) => {
         var allIds = followingIds.concat(followedByIds);
         console.log('all ids before splicing: ' + allIds.length);
         allIds = spliceDupilcates(allIds);

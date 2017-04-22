@@ -26,9 +26,20 @@ function Twitter() {
       this.callBackUrl,
       'HMAC-SHA1'
     );
+    this.queryTerms = [
+      'trump+syria',
+      'trump+russia',
+      'trump+korea'
+    ];
+    this.queryPos = 0;
+    this.followList = [];
   } catch (err) {
     console.log('missing config file');
   }
+}
+
+Twitter.prototype.incrementQuery = function () {
+  this.queryPos = (this.queryPos + 1 < this.queryTerms.length) ? this.queryPos + 1 : 0;
 }
 
 // AUTHENTICATION FUNCTIONS
@@ -67,24 +78,30 @@ Twitter.prototype.getOAuthAccessToken = function (oauth, next) {
 
 Twitter.prototype.getFollowing = function (params) {
   console.log('getting all following');
+  params.stringify_ids = true;
   var path = '/friends/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  return this.doRequests(url)
+  return new Promise((resolve, reject) => {
+    this.doRequests(url)
     .then((data) => {
-      return data[0];
+      resolve(data[0]);
     })
+  })
 }
 
 Twitter.prototype.getFollowedBy = function (params) {
   console.log('getting all followed by');
+  params.stringify_ids = true;
   var path = '/followers/ids.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  return this.doRequests(url)
+  return new Promise((resolve, reject) => {
+    this.doRequests(url)
     .then((data) => {
-      return data[0];
+      resolve(data[0]);
     })
+  })
 }
 
 Twitter.prototype.getAccountSettings = function (params) {
@@ -109,13 +126,15 @@ Twitter.prototype.getRateLimits = function () {
 }
 
 Twitter.prototype.getSearch = function (params) {
-  params.count = 10;
+  params.count = 100;
   var path = '/search/tweets.json' + this.buildQS(params);
   var url = this.baseUrl + path;
-  return this.doRequest(url)
-    .then((result) => {
-      return result;
-    })
+  return new Promise((resolve, reject) => {
+    this.doRequest(url)
+      .then((result) => {
+        resolve(result);
+      })
+  })
 }
 // POST
 
@@ -128,6 +147,9 @@ Twitter.prototype.postFollow = function (params) {
     .then((result) => {
       return result;
     });
+  // return new Promise((resolve, reject) => {
+  //   resolve('followed, yay!');
+  // })
 }
 
 Twitter.prototype.postUnfollow = function (params) {
@@ -135,18 +157,18 @@ Twitter.prototype.postUnfollow = function (params) {
   var path = '/friendships/destroy.json' + this.buildQS(params);
   var url = this.baseUrl + path;
   console.log(url);
-  // return this.doPost(url, {})
-  //   .then((result) => {
-  //     return result;
-  //   });
-  return new Promise((resolve, reject) => {
-    resolve('yay');
-  })
+  return this.doPost(url, {})
+    .then((result) => {
+      return result;
+    });
+  // return new Promise((resolve, reject) => {
+  //   resolve('yay');
+  // })
 }
 
 // DO FUNCTIONS
 
-Twitter.prototype.doRequest = function (url, error, success) {
+Twitter.prototype.doRequest = function (url) {
   url = formatUrl(url);
   return new Promise((resolve, reject) => {
     this.oauth.get(url, this.accessToken, this.accessTokenSecret, (err, bod, res) => {
