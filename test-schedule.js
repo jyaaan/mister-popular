@@ -20,7 +20,7 @@ var dayToday = dateToday.getDate();
 var testSchedule = new Schedule('unfollow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 400, resolution: 40
+  targetActions: 600, resolution: 40
 });
 
 var recurFifteen = new Schedule('recurring', 'john', {
@@ -108,7 +108,7 @@ testSchedule.scheduleNextAction(() => {
 var testFollowSchedule = new Schedule('Follow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 400, resolution: 40
+  targetActions: 600, resolution: 40
 });
 testFollowSchedule.assignBucketQuantities();
 testFollowSchedule.populateBuckets();
@@ -128,7 +128,7 @@ testFollowSchedule.scheduleNextAction(() => {
 function unfollowNext() {
   database.getNextUnfollow(twitter.clientId)
     .then((result) => {
-      if(typeof result[0].user_id != 'undefined'){
+      if(typeof result[0] != 'undefined'){
         var userId = result[0].user_id;
         database.lockRelationship(twitter.clientId, userId)
         .then((result) => {
@@ -158,6 +158,7 @@ function unfollowNext() {
           return 'complete';
         })
       } else {
+        console.log('beep, no one to unfollow');
         return 'no one to unfollow';
       }
     })

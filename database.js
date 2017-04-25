@@ -62,7 +62,7 @@ Database.prototype.getQueryUserIds = function (tableName, params) {
 
 Database.prototype.getNextUnfollow = function (clientId) {
   var dateNow = new Date(Date.now());
-  var datePrev = dateNow.setDate(dateNow.getDate() - 3);
+  var datePrev = new Date(dateNow.setDate(dateNow.getDate() - 3));
   return knex('relationships')
     .whereNot('user_id', 'like', '%00')
     .andWhere('client_id', clientId)
@@ -102,7 +102,7 @@ Database.prototype.logAction = function (clientId, userId, type) {
 Database.prototype.createRelationship = function (clientId, userId, params) {
   params.client_id = clientId;
   params.user_id = userId;
-  if (typeof params.following != undefined) {
+  if (typeof params.following != 'undefined') {
     if (params.following) {
       params.last_follow_ts = new Date(Date.now()).toISOString();
     }
@@ -113,7 +113,7 @@ Database.prototype.createRelationship = function (clientId, userId, params) {
 
 // rewrite to log on call
 Database.prototype.updateRelationship = function (clientId, userId, params) {
-  if (typeof params.following != undefined) {
+  if (typeof params.following != 'undefined') {
     if (params.following) {
       params.last_follow_ts = new Date(Date.now()).toISOString();
     }
@@ -180,14 +180,16 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params) {
       knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
       .then((result) => {
         var count = Number(result[0].count);
+        console.log('relationships count: ' + count);
         if (count > 0) {
           this.updateRelationship(clientId, userId, params)
           .then((result) => {
+            console.log('relationship updated for ' + userId);
           })
         } else {
           this.createRelationship(clientId, userId, params)
           .then((result) => {
-
+            console.log('relationship created for ' + userId);
           })
         }
         return 'ok';
