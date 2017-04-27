@@ -1,8 +1,3 @@
-/*
-select count(*) from log where action_type = 'following';
-select count(*) from log where action_type = 'unfollow';
-select count(*) from log where action_type = 'followed by';
-*/
 var Schedule = require('./schedule').Schedule;
 
 var Twitter = require('./twitter-client').Twitter;
@@ -20,7 +15,7 @@ var dayToday = dateToday.getDate();
 var testSchedule = new Schedule('unfollow', 'john', {
   startTime: new Date(yearToday, monthToday, dayToday, 9, 0, 0),
   stopTime: new Date(yearToday, monthToday, dayToday, 17, 30, 0),
-  targetActions: 600, resolution: 40
+  targetActions: 800, resolution: 40
 });
 
 var recurFifteen = new Schedule('recurring', 'john', {
@@ -56,15 +51,20 @@ recurFifteen.scheduleRecurring(15, () => {
           console.log('determining new following' + newFollowing.length);
           console.log('determining new unfollowing' + newUnfollowing.length)
           if (newUnfollowing.length > 0) {
-            database.upsertRelationships(clientId, newUnfollowing, { following: false })
+            database.upsertRelationships(clientId, newUnfollowing, { following: false }, 0)
               .then((result) => {
-
+              })
+              .catch((err) => {
+                console.error(err);
               })
           }
           if (newFollowing.length > 0) {
-            database.upsertRelationships(clientId, newFollowing, { following: true })
+            database.upsertRelationships(clientId, newFollowing, { following: true }, 0)
               .then((result) => {
 
+              })
+              .catch((err) => {
+                console.error(err);
               })
           }
         })
@@ -76,16 +76,20 @@ recurFifteen.scheduleRecurring(15, () => {
             console.log('determining new followed by' + newFollowedBy.length);
             console.log('determining new unfollowed by' + newUnfollowedBy.length);
             if (newFollowedBy.length > 0) {
-              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
-              .then((result) => {
-
-              });
+              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true }, 0)
+                .then((result) => {
+                })
+                .catch((err) => {
+                  console.error(err);
+                })
             }
             if (newUnfollowedBy.length > 0) {
-              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
-              .then((result) => {
-
-              });
+              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false }, 0)
+                .then((result) => {
+                })
+                .catch((err) => {
+                  console.error(err);
+                })
             }
           })
           return 'ok';
@@ -124,7 +128,9 @@ testFollowSchedule.scheduleNextAction(() => {
   console.log('following stats:');
   console.log((testFollowSchedule.schedulePos + 1) + ' out of ' + testFollowSchedule.actionSchedule.length);
 });
+
 // THIS FUNCTION TO BE ADDED INTO MAIN WHEN READY
+
 function unfollowNext() {
   database.getNextUnfollow(twitter.clientId)
     .then((result) => {
@@ -174,7 +180,7 @@ function followNext(twit) {
         return database.upsertUser(nextFollowId[0])
       })
       .then((result) => {
-        return database.upsertRelationships(twit.clientId, nextFollowId, { following: true })
+        return database.upsertRelationships(twit.clientId, nextFollowId, { following: true, followed_by: false }, 0)
         resolve('added');
       })
     } else {
@@ -215,8 +221,6 @@ function buildFollowList(objTwitter) {
         var searchIds = [];
         result.statuses.forEach((status) => {
           if(!(status.user.following || status.user.follow_request_sent)) {
-            // if (thisId.substr(thisId.length - 2) != '00') {
-              // console.log('pass');
               searchIds.push(status.user.id_str);
             // }
           }

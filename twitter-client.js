@@ -147,9 +147,6 @@ Twitter.prototype.postFollow = function (params) {
     .then((result) => {
       return result;
     });
-  // return new Promise((resolve, reject) => {
-  //   resolve('followed, yay!');
-  // })
 }
 
 Twitter.prototype.postUnfollow = function (params) {
@@ -161,9 +158,6 @@ Twitter.prototype.postUnfollow = function (params) {
     .then((result) => {
       return result;
     });
-  // return new Promise((resolve, reject) => {
-  //   resolve('yay');
-  // })
 }
 
 // DO FUNCTIONS
