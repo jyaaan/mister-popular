@@ -56,15 +56,10 @@ Database.prototype.getFollowing = function (clientId) {
   })
 }
 
-Database.prototype.getQueryUserIds = function (tableName, params) {
-
-}
-
 Database.prototype.getNextUnfollow = function (clientId) {
   var dateNow = new Date(Date.now());
-  var datePrev = dateNow.setDate(dateNow.getDate() - 3);
+  var datePrev = new Date(dateNow.setDate(dateNow.getDate() - 3));
   return knex('relationships')
-    .whereNot('user_id', 'like', '%00')
     .andWhere('client_id', clientId)
     .andWhere('following', true)
     .andWhere('followed_by', false)
@@ -98,33 +93,35 @@ Database.prototype.logAction = function (clientId, userId, type) {
     timestamp: new Date(Date.now()).toISOString() });
 }
 
-// rewrite to log on call
 Database.prototype.createRelationship = function (clientId, userId, params) {
-  params.client_id = clientId;
-  params.user_id = userId;
-  if (typeof params.following != undefined) {
-    if (params.following) {
-      params.last_follow_ts = new Date(Date.now()).toISOString();
+  const objParams = Object.assign({}, params);
+  objParams.client_id = clientId;
+  objParams.user_id = userId;
+  objParams.locked = false;
+  if (typeof objParams.following != 'undefined') {
+    if (objParams.following) {
+      objParams.last_follow_ts = new Date(Date.now()).toISOString();
     }
   }
+  console.log('attempting relationship creation of user: ' + userId + ' params: ' + objParams);
   return knex('relationships')
-    .insert(params)
+    .insert(objParams)
 }
 
-// rewrite to log on call
 Database.prototype.updateRelationship = function (clientId, userId, params) {
-  if (typeof params.following != undefined) {
-    if (params.following) {
-      params.last_follow_ts = new Date(Date.now()).toISOString();
+  const objParams = Object.assign({}, params);
+  if (typeof objParams.following != 'undefined') {
+    if (objParams.following) {
+      objParams.last_follow_ts = new Date(Date.now()).toISOString();
     }
   }
+  console.log('updating: ' + userId + ' with params: ' + objParams);
   return knex('relationships')
     .where('client_id', clientId)
     .andWhere('user_id', userId)
-    .update(params)
+    .update(objParams)
 }
 
-// rewrite to log on call OBSOLETE?
 Database.prototype.updateUnfollow = function (clientId, userId) {
   return knex('relationships')
     .where('client_id', clientId)
@@ -174,23 +171,30 @@ Database.prototype.upsertUser = function (userId) {
   })
 }
 
-Database.prototype.upsertRelationships = function (clientId, userIds, params) {
+Database.prototype.upsertRelationships = function (clientId, userIds, params, pos) {
+  let thisPos = pos;
+  let thisUserId = userIds[thisPos];
+  let db = this;
   return new Promise((resolve, reject) => {
-    userIds.forEach((userId) => {
-      knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', userId)
+    knex('relationships').count('*').where('client_id', clientId).andWhere('user_id', thisUserId)
       .then((result) => {
-        var count = Number(result[0].count);
+        let count = Number(result[0].count);
+        console.log('relationships count: ' + count);
         if (count > 0) {
-          this.updateRelationship(clientId, userId, params)
-          .then((result) => {
-          })
+          this.updateRelationship(clientId, thisUserId, params)
+            .then((result) => {
+              console.log('relationship updated for ' + thisUserId);
+            })
+            .catch(() => {
+              console.error('error when updating relationship');
+            })
         } else {
-          this.createRelationship(clientId, userId, params)
-          .then((result) => {
-
-          })
+          this.createRelationship(clientId, thisUserId, params)
+            .then((result) => {
+              console.log('relationship created for ' + thisUserId);
+            })
         }
-        return 'ok';
+        return 'upsert complete';
       })
       .then((message) => {
         if (typeof params.following != 'undefined') {
@@ -198,14 +202,23 @@ Database.prototype.upsertRelationships = function (clientId, userIds, params) {
         } else {
           var type = params.followed_by ? 'followed by' : 'unfollowed by';
         }
-        this.logAction(clientId, userId, type)
-        .then((result) => {
-          console.log('logged');
-          resolve('ok');
-        })
+        this.logAction(clientId, thisUserId, type)
+          .then((result) => {
+            console.log('logged');
+            if (thisPos+ 1 < userIds.length) {
+              return resolve(db.upsertRelationships(clientId, userIds, params, thisPos + 1));
+            } else {
+              resolve('upsert complete ended');
+            }
+            return 'upsert logged';
+          })
+        return 'this is sloppy';
+      })
+      .catch((err) => {
+        console.error('upsert error-c');
+        reject(err);
       })
     })
-  })
 }
 
 exports.Database = Database;

@@ -244,6 +244,15 @@ app.get('/initialize', (req, res) => {
     })
 })
 
+app.get('/test', (req, res) => {
+  var clientId = twitter.clientId;
+  getAllUserIds(clientId)
+    .then((objIds) => {
+      console.log(objIds);
+      return objIds;
+    })
+})
+
 app.get('/changes', (req, res) => {
   var clientId = twitter.clientId;
   getAllUserIds(clientId)
@@ -270,18 +279,23 @@ app.get('/changes', (req, res) => {
           console.log('determining new following' + newFollowing.length);
           console.log('determining new unfollowing' + newUnfollowing.length)
           if (newUnfollowing.length > 0) {
-            database.upsertRelationships(clientId, newUnfollowing, { following: false })
+            database.upsertRelationships(clientId, newUnfollowing, { following: false }, 0)
               .then((result) => {
-
+                console.log(result);
+              })
+              .catch((err) => {
+                console.error(err);
               })
           }
           if (newFollowing.length > 0) {
-            database.upsertRelationships(clientId, newFollowing, { following: true })
+            database.upsertRelationships(clientId, newFollowing, { following: true }, 0)
               .then((result) => {
 
               })
+              .catch((err) => {
+                console.error(err);
+              })
           }
-          return 'hi';
         })
         .then((result) => {
           database.getFollowedBy(clientId)
@@ -289,25 +303,33 @@ app.get('/changes', (req, res) => {
             var newFollowedBy = getUniqueIdsInA(objIds.followedBy, data);
             var newUnfollowedBy = getUniqueIdsInA(data, objIds.followedBy);
             console.log('determining new followed by' + newFollowedBy.length);
+            console.log(newFollowedBy);
             console.log('determining new unfollowed by' + newUnfollowedBy.length);
             if (newFollowedBy.length > 0) {
-              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true })
-              .then((result) => {
-
-              });
+              console.log('followed_by should be true');
+              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true }, 0)
+                .then((result) => {
+                  console.log(result);
+                })
+                .catch((err) => {
+                  console.log('new followed by upsert error');
+                  console.error(err);
+                })
             }
             if (newUnfollowedBy.length > 0) {
-              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false })
-              .then((result) => {
-
-              });
+              database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false }, 0)
+                .then((result) => {
+                  console.log(result);
+                })
+                .catch((err) => {
+                  console.error(err);
+                })
             }
           })
           return 'ok';
         })
       return objIds;
     })
-    res.send('done');
 })
 
 function generateRelationships(objIds, clientId) {
@@ -359,10 +381,6 @@ function getAllUserIds(clientId) {
   });
 }
 
-app.listen(5760, () => {
-  console.log('listening to port 5760');
-})
-
 function pairKeyValue(key, values) {
   return values.map((value) => {
     var obj = {};
@@ -370,3 +388,7 @@ function pairKeyValue(key, values) {
     return obj;
   });
 }
+
+app.listen(5760, () => {
+  console.log('listening to port 5760');
+})
