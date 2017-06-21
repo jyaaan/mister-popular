@@ -5,6 +5,7 @@ var twitter = new Twitter();
 
 var Database = require('./database').Database;
 var database = new Database();
+const async = require('async');
 
 var tempFollowingDate = new Date(2017, 3, 15, 9, 0, 0);
 
@@ -76,12 +77,10 @@ recurFifteen.scheduleRecurring(15, () => {
             console.log('determining new followed by' + newFollowedBy.length);
             console.log('determining new unfollowed by' + newUnfollowedBy.length);
             if (newFollowedBy.length > 0) {
-              database.upsertRelationships(clientId, newFollowedBy, { followed_by: true }, 0)
-                .then((result) => {
-                })
-                .catch((err) => {
-                  console.error(err);
-                })
+              followBack(clientId, newFollowedBy)
+                .then(recip => {
+
+                });
             }
             if (newUnfollowedBy.length > 0) {
               database.upsertRelationships(clientId, newUnfollowedBy, { followed_by: false }, 0)
@@ -97,6 +96,28 @@ recurFifteen.scheduleRecurring(15, () => {
       return objIds;
     })
 })
+
+const followBack = (clientId, newFollowerIds) => {
+  return new Promise((resolve, reject) => {
+    async.mapSeries(newFollowerIds, (newFollowerId, next) => {
+      twitter.postFollow({ user_id: newFollowerId })
+        .then(followed => {
+          database.upsertUser(newFollowerId)
+            .then(user => {
+              next();
+            })
+        })
+    }, err => {
+      database.upsertRelationships(clientId, newFollowerIds, { following: true, followed_by: true }, 0)
+        .then(upserts => {
+          resolve('followed back');
+        })
+        .catch(err => {
+          reject('error following back');
+        })
+    })
+  })
+}
 
 testSchedule.assignBucketQuantities();
 testSchedule.populateBuckets();
