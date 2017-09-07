@@ -1,28 +1,37 @@
 /*
-ideas area!
-hot spots
-  - enter buckets that will get a higher number of actions upon distribution
-  - off by default. can be set manually or randomly, given number of hot spots
+Scheduler is used to schedule the day's follow and unfollow events.
+Since twitter appears to monitor usage on 15-minute intervals, Mr. Pop breaks the day into
+96, 15-minute "buckets" (indexed at 0).
+
+The scheduler takes in a start and stop time (GMT) and the number of actions to take.
+It will then randomly distribute these actions into the buckets, working under two limits: resolution and minInterval
+
+Resolution will limit the number of actions per bucket while minInterval denotes the minimum spacing between actions.
+
+Follow and unfollow actions are scheduled separately in their own actionSchedules.
+
+actionSchedules do not directly perform the action! the npm package node schedule is what's actually performing the action at
+a future date. The actionSchedule is only used as reference to schedule future actions using node schedule.
+
+App also checks followers and following  to see if people followed back.
 */
 var scheduler = require('node-schedule');
 
 function Schedule(type, clientId, params) {
   this.type = type;
-  this.buckets = initBuckets();
+  this.buckets = initBuckets(); // results in an array of 96 buckets indexed at 0
   this.clientId = clientId;
-  this.startTime = params.startTime;
-  this.stopTime = params.stopTime;
+  this.startTime = params.startTime; // Time of day to start actions. Can be placed in the past
+  this.stopTime = params.stopTime; // Time of day to stop actions. Must be in future.
   this.targetActions = params.targetActions; // this has to be less than resolution * active buckets
-  this.actionSchedule = [];
+  this.actionSchedule = []; // 
   this.schedulePos = 0;
   this.resolution = params.resolution; // this shows how many actions can be done in a 15 min interval
-  this.minInterval = 3; // in seconds, it's 900 / resolution
+  this.minInterval = 3; // in seconds
 }
 
-// ADD DAILY SCHEDULER HERE
-// reschedules, updates progress with following and follower counts
 
-
+// Method to iterate through actions in schedule
 Schedule.prototype.incrementAction = function () {
   this.schedulePos = this.getNextActionPos();
 }
@@ -56,12 +65,14 @@ function getBucketQuantity(startTime, stopTime) {
   return timeToBucket(stopTime) - timeToBucket(startTime);
 }
 
+// returns index number of bucket correlating to input time.
 function timeToBucket(time) {
   var hour = time.getHours();
   var quarter = Math.floor(time.getMinutes() / 15);
   return (hour * 4 + quarter);
 }
 
+// returns time when bucket with provided index number will become active.
 function bucketToTime(bucketIndex) {
   var hours = Math.floor(bucketIndex / 4);
   var minutes = (bucketIndex % 4) * 15;
@@ -69,15 +80,17 @@ function bucketToTime(bucketIndex) {
   return new Date(newDate.getFullYear(), newDate.getMonth(), newDate.getDate(), hours, minutes, 0);
 }
 
+// returns time to schedule specified action
 function getScheduleTime(baseTime, seconds) {
   return new Date(baseTime.getTime() + (seconds * 1000));
 }
 
+// randomly fills buckets with actions
 Schedule.prototype.populateBuckets = function () {
   this.buckets.forEach((bucket) => {
     var actionsInBucket = bucket.quantity;
     var intervals = [];
-    for (var i = 0; i <= actionsInBucket; i++) { // extra interval necessary to keep final action from always being at end
+    for (var i = 0; i < actionsInBucket + 1; i++) { // extra interval necessary to keep final action from always being at end
       intervals.push(Math.random());
     }
 
@@ -97,6 +110,7 @@ Schedule.prototype.populateBuckets = function () {
   });
 }
 
+// combines all buckets and the actions they contain into a single array of action objects called the actionSchedule
 Schedule.prototype.generateActionPlan = function () {
   var plan = [];
   this.buckets.forEach((bucket) => {
@@ -110,6 +124,7 @@ Schedule.prototype.generateActionPlan = function () {
   this.actionSchedule = plan;
 }
 
+// returns index number of next action in queue. -1 if none remaining
 Schedule.prototype.getNextActionPos = function () {
   var now = new Date(Date.now());
   if (this.schedulePos != -1) {
@@ -121,6 +136,7 @@ Schedule.prototype.getNextActionPos = function () {
     return -1;
   }
 }
+
 
 Schedule.prototype.scheduleNextAction = function (action) {
   var nextActionDate = this.actionSchedule[this.schedulePos];

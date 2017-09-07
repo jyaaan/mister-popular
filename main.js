@@ -1,4 +1,11 @@
-// CAUTION Manual unfollows will not be caught by app
+/*
+* MISTER POPULAR SET UP REQUIREMENTS:
+* -TWITTER ACCOUNT LOGIN CREDENTIALS
+* -ENABLE MISTER POPULAR AS A TWITTER APP
+* -CREATE "user-config" FILE ACCORDING TO GUIDELINES IN ROOT
+* -CREATE POSTGRES DATABASE CALLED "mister-popular"
+* -RUN ALL MIGRATION FILES
+*/
 
 var express = require('express');
 var app = express();
@@ -9,6 +16,8 @@ var twitter = new Twitter();
 var Database = require('./database').Database;
 var database = new Database();
 
+// Usually for initial setup only
+// Defines date to use as makeshift "followed by" date
 var tempFollowingDate = new Date(2017, 3, 20, 9, 0, 0);
 
 // var Schedule = require('./schedule').Schedule;
@@ -18,12 +27,14 @@ function showScreenName(data) {
   console.log(data.screen_name);
 }
 
+// Removes duplicates from array
 function spliceDupilcates(arr) {
   return arr.filter((item, index, array) => {
     return array.indexOf(item) == index;
   });
 }
 
+// Input two arrays, get elements unique to first array
 function getUniqueIdsInA(arrA, arrB) {
   return arrA.filter((itemA) => {
     return arrB.findIndex((itemB) => {
@@ -32,6 +43,7 @@ function getUniqueIdsInA(arrA, arrB) {
   })
 }
 
+// API endpoints for control. Adapt this into a UI
 app.get('/limits', (req, res) => {
   twitter.getRateLimits();
 })
@@ -91,6 +103,7 @@ app.get('/clear/:tableName', (req, res) => {
     });
 })
 
+// Completely clears 
 app.get('/hardreset', (req, res) => {
   database.clearTable('users')
     .then((result) => {

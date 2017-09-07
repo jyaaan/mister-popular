@@ -17,7 +17,7 @@ Database.prototype.clearTable = function (tableName) {
 Database.prototype.getUserIds = function (tableName) {
   return new Promise((resolve, reject) => {
     knex(tableName).select('id')
-      .then((result) => {
+      .then(result => {
         var ids = result.map((obj) => {
           return obj.id;
         })

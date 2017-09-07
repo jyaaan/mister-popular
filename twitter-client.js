@@ -10,6 +10,8 @@ var config = require('./user-config');
 function Twitter() {
   var configPath = 'data/twitter_config';
   try {
+
+    // Establish security protocol
     this.consumerKey = config.consumerKey;
     this.consumerSecret = config.consumerSecret;
     this.accessToken = config.accessToken;
@@ -26,6 +28,8 @@ function Twitter() {
       this.callBackUrl,
       'HMAC-SHA1'
     );
+
+    // When looking for more people to follow, cycle through these terms.
     this.queryTerms = [
       'trump+syria',
       'trump+russia',
@@ -33,6 +37,8 @@ function Twitter() {
     ];
     this.queryPos = 0;
     this.followList = [];
+
+
   } catch (err) {
     console.log('missing config file');
   }
