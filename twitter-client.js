@@ -3,12 +3,26 @@ var qs = require('qs');
 var fs = require('fs');
 
 // MORE SECURE
+/*
+Point to config file.
+Format:
+module.exports = {
+  consumerKey: "obtain from twitter app console",
+  consumerSecret: "obtain from twitter app console",
+  accessToken: "obtain from twitter app console",
+  accessTokenSecret: "obtain from twitter app console",
+  clientId: "obtain from twitter settings",
+  callBackUrl: "http://localhost:5760/index.html"
+}
+~
+*/
 var config = require('./user-config');
 
 // CONSTRUCTOR
 
 function Twitter() {
-  var configPath = 'data/twitter_config';
+  // tag for removal
+  var configPath = 'data/twitter_configWHAT';
   try {
 
     // Establish security protocol

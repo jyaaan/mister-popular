@@ -18,14 +18,14 @@ App also checks followers and following  to see if people followed back.
 var scheduler = require('node-schedule');
 
 function Schedule(type, clientId, params) {
-  this.type = type;
+  this.type = type; // follow or unfollow
   this.buckets = initBuckets(); // results in an array of 96 buckets indexed at 0
   this.clientId = clientId;
   this.startTime = params.startTime; // Time of day to start actions. Can be placed in the past
   this.stopTime = params.stopTime; // Time of day to stop actions. Must be in future.
   this.targetActions = params.targetActions; // this has to be less than resolution * active buckets
-  this.actionSchedule = []; // 
-  this.schedulePos = 0;
+  this.actionSchedule = []; // array of all times that actions should be taken
+  this.schedulePos = 0; // 
   this.resolution = params.resolution; // this shows how many actions can be done in a 15 min interval
   this.minInterval = 3; // in seconds
 }
@@ -36,6 +36,9 @@ Schedule.prototype.incrementAction = function () {
   this.schedulePos = this.getNextActionPos();
 }
 
+// creates the 96 buckets that will hold actions
+// Buckets are objects that have an index number (a.k.a absQuarter), quantity of actions ...
+// and an array which contains times at which the actions should be taken
 function initBuckets() {
   var objBuckets = [];
   for (var i = 0; i < 96; i++) {
@@ -48,6 +51,7 @@ function initBuckets() {
   return objBuckets;
 }
 
+// distributes actions into buckets and spaces them apart
 Schedule.prototype.assignBucketQuantities = function () {
   var numberOfBuckets = getBucketQuantity(this.startTime, this.stopTime);
   var startBucket = timeToBucket(this.startTime);
@@ -61,6 +65,7 @@ Schedule.prototype.assignBucketQuantities = function () {
   }
 }
 
+// gives number of active buckets between start and stop times.
 function getBucketQuantity(startTime, stopTime) {
   return timeToBucket(stopTime) - timeToBucket(startTime);
 }
